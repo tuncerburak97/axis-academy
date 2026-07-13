@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/lib/actions/auth";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { getActiveRequestCount } from "@/lib/queries/admin-requests";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
@@ -17,6 +18,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .single();
   if (profile?.role !== "admin") notFound();
 
+  const activeRequestCount = await getActiveRequestCount();
+
   return (
     <div className="flex min-h-screen">
       <aside className="hidden w-60 shrink-0 flex-col border-r border-line bg-white p-4 md:flex">
@@ -24,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           Axis<span className="text-accent"> Admin</span>
         </Link>
         <div className="mt-4 flex-1">
-          <AdminNav />
+          <AdminNav activeRequestCount={activeRequestCount} />
         </div>
         <form action={logout}>
           <button

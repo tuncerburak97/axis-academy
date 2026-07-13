@@ -79,3 +79,46 @@ npm run build        # production derlemesi
 npm run lint         # ESLint
 npm run check-types  # TypeScript kontrolü
 ```
+
+## Docker (Production)
+
+Uygulama `www.axisakademi.com` için containerize edilmiştir. Dışarıdan **5000** portu (HTTP); HTTPS harici nginx/Caddy ile sağlanır.
+
+### Kurulum
+
+```bash
+copy .env.production.example .env.production   # Windows
+# cp .env.production.example .env.production   # macOS/Linux
+# .env.production içindeki Supabase değerlerini doldur
+
+docker compose --env-file .env.production up -d --build
+```
+
+Erişim: `http://localhost:5000`
+
+### Supabase (deploy öncesi)
+
+Authentication → URL Configuration:
+
+- **Site URL:** `https://www.axisakademi.com`
+- **Redirect URLs:** `https://www.axisakademi.com/auth/callback`
+
+### Diğer komutlar
+
+```bash
+docker compose logs -f app      # loglar
+docker compose down             # durdur
+docker compose up -d --build    # yeniden build + başlat
+```
+
+### nginx proxy (host tarafı)
+
+```nginx
+location / {
+    proxy_pass http://127.0.0.1:5000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
