@@ -1,0 +1,94 @@
+/* src/app/globals.css — Tailwind v4 + "Aydınlık Editorial" tasarım token'ları */
+@import "tailwindcss";
+
+@theme inline {
+  /* Renk token'ları: sade, aydınlık zemin + güçlü vurgular */
+  --color-ink: #0e1a2b;          /* ana metin, koyu lacivert */
+  --color-ink-soft: #5b6472;     /* ikincil metin */
+  --color-surface: #f8f9fb;      /* açık yüzey */
+  --color-line: #e6e9ef;         /* ince ayırıcı/kenarlık */
+  --color-accent: #4f46e5;       /* birincil aksiyon (indigo) */
+  --color-accent-strong: #4338ca;/* hover tonu */
+  --color-accent-soft: #eef2ff;  /* indigo açık zemin */
+  --color-amber: #f59e0b;        /* fiyat/istatistik vurgusu */
+  --color-amber-soft: #fef3c7;
+  --color-success: #16a34a;
+
+  /* Tipografi: Sora (display) + Inter (gövde), next/font değişkenleri */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, sans-serif;
+}
+
+body {
+  @apply bg-white text-ink font-sans antialiased;
+}
+
+/* Erişilebilirlik: tüm etkileşimli öğelerde görünür focus halkası */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Markdown içerik (react-markdown çıktısı) için okunabilir tipografi */
+.prose-custom {
+  color: var(--color-ink-soft);
+  font-size: 0.925rem;
+  line-height: 1.7;
+}
+.prose-custom h1,
+.prose-custom h2,
+.prose-custom h3 {
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+.prose-custom h1 { font-size: 1.35rem; }
+.prose-custom h2 { font-size: 1.15rem; }
+.prose-custom h3 { font-size: 1rem; }
+.prose-custom p { margin: 0.6em 0; }
+.prose-custom ul,
+.prose-custom ol {
+  margin: 0.6em 0;
+  padding-left: 1.4em;
+}
+.prose-custom ul { list-style: disc; }
+.prose-custom ol { list-style: decimal; }
+.prose-custom li { margin: 0.25em 0; }
+.prose-custom a {
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.prose-custom code {
+  background: var(--color-surface);
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-size: 0.85em;
+}
+.prose-custom blockquote {
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-accent-soft);
+  border-radius: 0 8px 8px 0;
+  margin: 0.8em 0;
+  padding: 0.6em 1em;
+}
+.prose-custom table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.8em 0;
+  font-size: 0.875rem;
+}
+.prose-custom th,
+.prose-custom td {
+  border: 1px solid var(--color-line);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+.prose-custom th {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-weight: 600;
+}
