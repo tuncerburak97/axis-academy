@@ -111,27 +111,16 @@ docker compose down             # durdur
 docker compose up -d --build    # yeniden build + başlat
 ```
 
-### nginx proxy (host tarafı)
+### nginx (host tarafı)
 
-```nginx
-location / {
-    proxy_pass http://127.0.0.1:5000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Real-IP $remote_addr;
-    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-    proxy_set_header X-Forwarded-Proto $scheme;
-}
+Tam config: `deploy/nginx/axisakademi.conf` — sunucuya kopyalayıp aşağıdaki adımları izleyin.
+
+```bash
+sudo apt update && sudo apt install -y nginx certbot python3-certbot-nginx
+sudo cp deploy/nginx/axisakademi.conf /etc/nginx/sites-available/axisakademi.com
+sudo ln -sf /etc/nginx/sites-available/axisakademi.com /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo mkdir -p /var/www/certbot
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d axisakademi.com -d www.axisakademi.com
 ```
-# .env.production — Docker production ortamı (git'e girmez)
-APP_URL=https://axisakademi.com
-NODE_ENV=production
-
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://ysroydlnzrfscrqaltds.supabase.co
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_x24i912fWWkgzgxK-Sg_VA_qiQFLlto
-
-# Opsiyonel — boş (bildirimler atlanır)
-SUPABASE_SECRET_KEY=
-RESEND_API_KEY=
-ADMIN_EMAIL=
-EMAIL_FROM=
