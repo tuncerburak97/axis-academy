@@ -82,7 +82,7 @@ npm run check-types  # TypeScript kontrolü
 
 ## Docker (Production)
 
-Uygulama `www.axisakademi.com` için containerize edilmiştir. Dışarıdan **5000** portu (HTTP); HTTPS harici nginx/Caddy ile sağlanır.
+Uygulama `axisakademi.com` için containerize edilmiştir. Dışarıdan **5000** portu (HTTP); HTTPS harici nginx/Caddy ile sağlanır.
 
 ### Kurulum
 
@@ -100,8 +100,8 @@ Erişim: `http://localhost:5000`
 
 Authentication → URL Configuration:
 
-- **Site URL:** `https://www.axisakademi.com`
-- **Redirect URLs:** `https://www.axisakademi.com/auth/callback`
+- **Site URL:** `https://axisakademi.com`
+- **Redirect URLs:** `https://axisakademi.com/auth/callback`
 
 ### Diğer komutlar
 

@@ -4,13 +4,13 @@ Tarih: 2026-07-14 · Durum: Onaylandı
 
 ## 1. Amaç
 
-Next.js 15 uygulamasını production ortamında Docker ile çalıştırmak. Container dışarıdan **5000** portundan HTTP ile erişilebilir; HTTPS harici nginx/Caddy ile `www.axisakademi.com` üzerinden sağlanır. Tüm environment değişkenleri Docker üzerinden okunur.
+Next.js 15 uygulamasını production ortamında Docker ile çalıştırmak. Container dışarıdan **5000** portundan HTTP ile erişilebilir; HTTPS harici nginx/Caddy ile `axisakademi.com` üzerinden sağlanır. Tüm environment değişkenleri Docker üzerinden okunur.
 
 ## 2. Kullanıcı Kararları
 
 | Karar | Seçim |
 |---|---|
-| Domain | `www.axisakademi.com` |
+| Domain | `axisakademi.com` |
 | Dış port | `5000` (HTTP) |
 | SSL | Harici nginx/Caddy (compose dışında) |
 | Supabase | Cloud (harici; compose'a DB eklenmez) |
@@ -93,7 +93,7 @@ Build args ve runtime env aynı `.env.production` dosyasından okunur (`docker c
 
 | Değişken | Açıklama | Production değeri |
 |---|---|---|
-| `APP_URL` | Public site URL (dokümantasyon/nginx referansı) | `https://www.axisakademi.com` |
+| `APP_URL` | Public site URL (dokümantasyon/nginx referansı) | `https://axisakademi.com` |
 | `NODE_ENV` | Ortam | `production` |
 
 ### Opsiyonel (boş — bildirimler atlanır)
@@ -132,7 +132,7 @@ Hariç tutulacaklar:
 
 ```
 İnternet
-  → nginx/Caddy (443 HTTPS, www.axisakademi.com)
+  → nginx/Caddy (443 HTTPS, axisakademi.com)
     → localhost:5000 (HTTP)
       → Docker container port 3000 (Next.js)
 ```
@@ -143,8 +143,8 @@ Port mapping: `5000:3000` (host:container)
 
 Authentication → URL Configuration:
 
-- **Site URL:** `https://www.axisakademi.com`
-- **Redirect URLs:** `https://www.axisakademi.com/auth/callback`
+- **Site URL:** `https://axisakademi.com`
+- **Redirect URLs:** `https://axisakademi.com/auth/callback`
 
 ## 11. Kullanım Komutları
 
@@ -162,14 +162,14 @@ docker compose down
 docker compose --env-file .env.production up -d --build
 ```
 
-Erişim: `http://localhost:5000` (nginx arkasında `https://www.axisakademi.com`)
+Erişim: `http://localhost:5000` (nginx arkasında `https://axisakademi.com`)
 
 ## 12. nginx Örnek Proxy (host tarafı, kapsam dışı ama referans)
 
 ```nginx
 server {
     listen 443 ssl;
-    server_name www.axisakademi.com;
+    server_name axisakademi.com;
 
     location / {
         proxy_pass http://127.0.0.1:5000;
