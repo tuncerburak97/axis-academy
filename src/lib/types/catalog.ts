@@ -89,6 +89,28 @@ export interface SyllabusWeek {
   sort_order: number;
 }
 
+export type WeekKind = "core" | "specialized";
+
+export interface BundleSyllabusWeek {
+  id: string;
+  bundle_id: string;
+  week_number: number;
+  title: string;
+  description: string;
+  week_kind: WeekKind;
+  source_module_week_id: string | null;
+  sort_order: number;
+}
+
+export interface BundleWithSyllabus extends BundlePackage {
+  weeks: BundleSyllabusWeek[];
+}
+
+export const weekKindLabels: Record<WeekKind, string> = {
+  core: "Ortak temel",
+  specialized: "Pakete özel",
+};
+
 export interface TrainingClass {
   id: string;
   module_id: string;

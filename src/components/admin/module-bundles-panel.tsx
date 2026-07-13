@@ -3,23 +3,25 @@
 
 import { Plus } from "lucide-react";
 import { createBundle, deleteBundle, updateBundle } from "@/lib/actions/admin-catalog";
+import { BundleSyllabusPanel } from "@/components/admin/bundle-syllabus-panel";
 import { AdminFormDialog } from "@/components/admin/admin-form-dialog";
 import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { BundleFields } from "@/components/admin/module-catalog-fields";
 import { SubmitButton } from "@/components/admin/fields";
-import type { BundlePackage } from "@/lib/types/catalog";
+import type { BundlePackage, BundleSyllabusWeek } from "@/lib/types/catalog";
 
 interface ModuleBundlesPanelProps {
   moduleId: string;
   bundles: BundlePackage[];
+  bundleSyllabi: Record<string, BundleSyllabusWeek[]>;
 }
 
-export function ModuleBundlesPanel({ moduleId, bundles }: ModuleBundlesPanelProps) {
+export function ModuleBundlesPanel({ moduleId, bundles, bundleSyllabi }: ModuleBundlesPanelProps) {
   return (
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-ink-soft">
-          Public detay sayfasındaki &quot;Örnek Paketleri Gör&quot; popup&apos;ında sergilenen şablonlar.
+          Public detay sayfasındaki &quot;Paketleri Karşılaştır&quot; bölümünde sergilenen şablonlar ve müfredatları.
         </p>
         <AdminFormDialog
           title="Yeni Örnek Paket"
@@ -70,6 +72,7 @@ export function ModuleBundlesPanel({ moduleId, bundles }: ModuleBundlesPanelProp
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
+                        <BundleSyllabusDialog bundle={bundle} weeks={bundleSyllabi[bundle.id] ?? []} />
                         <BundleEditDialog bundle={bundle} />
                         <ConfirmDeleteButton
                           action={deleteBundle}
@@ -112,7 +115,8 @@ export function ModuleBundlesPanel({ moduleId, bundles }: ModuleBundlesPanelProp
                     <dd>{bundle.duration_hours} saat</dd>
                   </div>
                 </dl>
-                <div className="mt-4 flex items-center gap-3 border-t border-line pt-3">
+                <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-3">
+                  <BundleSyllabusDialog bundle={bundle} weeks={bundleSyllabi[bundle.id] ?? []} />
                   <BundleEditDialog bundle={bundle} />
                   <ConfirmDeleteButton
                     action={deleteBundle}
@@ -131,6 +135,19 @@ export function ModuleBundlesPanel({ moduleId, bundles }: ModuleBundlesPanelProp
         </>
       )}
     </div>
+  );
+}
+
+function BundleSyllabusDialog({ bundle, weeks }: { bundle: BundlePackage; weeks: BundleSyllabusWeek[] }) {
+  return (
+    <AdminFormDialog
+      title={`${bundle.title} — Müfredat`}
+      triggerLabel="Müfredat"
+      triggerVariant="text"
+      size="lg"
+    >
+      <BundleSyllabusPanel bundle={bundle} weeks={weeks} />
+    </AdminFormDialog>
   );
 }
 

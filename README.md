@@ -25,6 +25,7 @@ npm run dev
    - `0006_storage_buckets.sql` — storage bucket'ları otomatik oluşturur
    - `0007_admin_delete_policies.sql` — admin hard delete RLS politikaları
    - `0008_module_syllabus.sql` — haftalık müfredat + sınıf güncel hafta override
+   - `0009_bundle_syllabus.sql` — paket bazlı hibrit müfredat (çekirdek + özel haftalar)
 3. Authentication → Providers'tan **Email** (doğrulama açık) ve **Google** sağlayıcılarını etkinleştir.
 4. Storage bucket'ları `0006` migration ile otomatik oluşur. Eski kurulumlarda manuel oluşturmak istersen **private** bucket'lar:
    - `request-files` — analiz/tez talep dosyaları
@@ -38,7 +39,8 @@ Migration'lardan sonra örnek içerik için:
 
 ```sql
 -- supabase/seed_education.sql  → modüller, konular, paketler, fiyat planları, örnek sınıflar
--- supabase/seed_syllabus.sql   → Excel (10), Word (8), PowerPoint (8) haftalık müfredat
+-- supabase/seed_syllabus.sql   → Excel (10), Word (8), PowerPoint (8) haftalık modül müfredatı
+-- supabase/seed_bundle_syllabus.sql → paket bazlı hibrit müfredat (çekirdek + özel)
 -- supabase/seed_courses.sql    → ek sınıflar ve örnek MD materyaller
 ```
 

@@ -1,6 +1,6 @@
 // src/lib/queries/catalog.ts — eğitim kataloğu okuma sorguları (Server Component'lerden çağrılır)
 import { createClient } from "@/lib/supabase/server";
-import type { BundlePackage, EducationModule, PricingPlan, SyllabusWeek } from "@/lib/types/catalog";
+import type { BundlePackage, BundleSyllabusWeek, BundleWithSyllabus, EducationModule, PricingPlan, SyllabusWeek } from "@/lib/types/catalog";
 
 export async function getActiveModules(): Promise<EducationModule[]> {
   const supabase = await createClient();
@@ -83,4 +83,58 @@ export async function getModuleSyllabus(moduleId: string): Promise<SyllabusWeek[
     .eq("module_id", moduleId)
     .order("week_number");
   return data ?? [];
+}
+
+export async function getBundleSyllabus(bundleId: string): Promise<BundleSyllabusWeek[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("bundle_syllabus_weeks")
+    .select("*")
+    .eq("bundle_id", bundleId)
+    .order("week_number");
+  return data ?? [];
+}
+
+export async function getModuleBundleSyllabi(moduleId: string): Promise<Record<string, BundleSyllabusWeek[]>> {
+  const bundles = await getModuleBundles(moduleId);
+  if (bundles.length === 0) return {};
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("bundle_syllabus_weeks")
+    .select("*")
+    .in("bundle_id", bundles.map((b) => b.id))
+    .order("week_number");
+
+  const map: Record<string, BundleSyllabusWeek[]> = {};
+  for (const bundle of bundles) map[bundle.id] = [];
+  for (const week of data ?? []) {
+    if (!map[week.bundle_id]) map[week.bundle_id] = [];
+    map[week.bundle_id].push(week);
+  }
+  return map;
+}
+
+export async function getActiveBundlesWithSyllabus(moduleId: string): Promise<BundleWithSyllabus[]> {
+  const bundles = await getActiveBundles(moduleId);
+  if (bundles.length === 0) return [];
+
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("bundle_syllabus_weeks")
+    .select("*")
+    .in("bundle_id", bundles.map((b) => b.id))
+    .order("week_number");
+
+  const weeksByBundle = new Map<string, BundleSyllabusWeek[]>();
+  for (const week of data ?? []) {
+    const list = weeksByBundle.get(week.bundle_id) ?? [];
+    list.push(week);
+    weeksByBundle.set(week.bundle_id, list);
+  }
+
+  return bundles.map((bundle) => ({
+    ...bundle,
+    weeks: weeksByBundle.get(bundle.id) ?? [],
+  }));
 }

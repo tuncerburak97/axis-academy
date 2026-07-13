@@ -8,7 +8,7 @@ import { ModulePlansPanel } from "@/components/admin/module-plans-panel";
 import { ModuleSyllabusPanel } from "@/components/admin/module-syllabus-panel";
 import { ModuleInfoFields } from "@/components/admin/module-catalog-fields";
 import { SubmitButton } from "@/components/admin/fields";
-import type { BundlePackage, EducationModule, PricingPlan, SyllabusWeek } from "@/lib/types/catalog";
+import type { BundlePackage, BundleSyllabusWeek, EducationModule, PricingPlan, SyllabusWeek } from "@/lib/types/catalog";
 
 type ModuleTab = "general" | "syllabus" | "plans" | "bundles";
 
@@ -16,6 +16,7 @@ interface ModuleDetailTabsProps {
   module: EducationModule;
   plans: PricingPlan[];
   bundles: BundlePackage[];
+  bundleSyllabi: Record<string, BundleSyllabusWeek[]>;
   syllabus: SyllabusWeek[];
   initialTab?: ModuleTab;
 }
@@ -27,7 +28,7 @@ const tabLabels: Record<ModuleTab, string> = {
   bundles: "Örnek Paketler",
 };
 
-export function ModuleDetailTabs({ module, plans, bundles, syllabus, initialTab = "general" }: ModuleDetailTabsProps) {
+export function ModuleDetailTabs({ module, plans, bundles, bundleSyllabi, syllabus, initialTab = "general" }: ModuleDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<ModuleTab>(initialTab);
 
   const tabs: { id: ModuleTab; count?: number }[] = [
@@ -80,7 +81,9 @@ export function ModuleDetailTabs({ module, plans, bundles, syllabus, initialTab 
 
         {activeTab === "syllabus" && <ModuleSyllabusPanel moduleId={module.id} weeks={syllabus} />}
         {activeTab === "plans" && <ModulePlansPanel moduleId={module.id} plans={plans} />}
-        {activeTab === "bundles" && <ModuleBundlesPanel moduleId={module.id} bundles={bundles} />}
+        {activeTab === "bundles" && (
+          <ModuleBundlesPanel moduleId={module.id} bundles={bundles} bundleSyllabi={bundleSyllabi} />
+        )}
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { getModuleById, getModuleBundles, getModulePlans, getModuleSyllabus } from "@/lib/queries/catalog";
+import { getModuleById, getModuleBundles, getModuleBundleSyllabi, getModulePlans, getModuleSyllabus } from "@/lib/queries/catalog";
 import { ModuleDetailTabs } from "@/components/admin/module-detail-tabs";
 import { categoryLabels } from "@/lib/types/catalog";
 import { StatusBanner } from "@/components/admin/fields";
@@ -24,10 +24,11 @@ export default async function ModuleDetailPage({
   const educationModule = await getModuleById(id);
   if (!educationModule) notFound();
 
-  const [plans, bundles, syllabus] = await Promise.all([
+  const [plans, bundles, syllabus, bundleSyllabi] = await Promise.all([
     getModulePlans(id),
     getModuleBundles(id),
     getModuleSyllabus(id),
+    getModuleBundleSyllabi(id),
   ]);
 
   const initialTab =
@@ -55,6 +56,7 @@ export default async function ModuleDetailPage({
           module={educationModule}
           plans={plans}
           bundles={bundles}
+          bundleSyllabi={bundleSyllabi}
           syllabus={syllabus}
           initialTab={initialTab}
         />

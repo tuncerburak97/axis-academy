@@ -1,5 +1,4 @@
-// src/app/(public)/egitim/[id]/page.tsx — modül detayı: uzun açıklama, özellikler,
-// fiyatlama bölümü ve "Örnek Paketleri Gör" popup'ı
+// src/app/(public)/egitim/[id]/page.tsx — modül detayı: paket karşılaştırma, özellikler, fiyatlama
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,8 +15,8 @@ import {
   Timer,
   UserPlus,
 } from "lucide-react";
-import { getActiveBundles, getModuleById, getModuleSyllabus, getPublicUpcomingClasses } from "@/lib/queries/catalog";
-import { SyllabusTimeline } from "@/components/public/syllabus-timeline";
+import { getActiveBundlesWithSyllabus, getModuleById, getPublicUpcomingClasses } from "@/lib/queries/catalog";
+import { BundleComparisonSection } from "@/components/public/bundle-comparison-section";
 import { categoryLabels } from "@/lib/types/catalog";
 import { categoryImages } from "@/lib/images";
 import { PackagesDialog } from "@/components/public/packages-dialog";
@@ -34,11 +33,16 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
   const educationModule = await getModuleById(id);
   if (!educationModule || !educationModule.is_active) notFound();
 
-  const [bundles, upcomingClasses, syllabus] = await Promise.all([
-    getActiveBundles(id),
+  const [bundles, upcomingClasses] = await Promise.all([
+    getActiveBundlesWithSyllabus(id),
     getPublicUpcomingClasses(id),
-    getModuleSyllabus(id),
   ]);
+
+  const hasBundleSyllabus = bundles.some((b) => b.weeks.length > 0);
+  const maxWeeks = Math.max(...bundles.map((b) => b.weeks.length), 0);
+  const minWeeks = bundles.filter((b) => b.weeks.length > 0).length > 0
+    ? Math.min(...bundles.filter((b) => b.weeks.length > 0).map((b) => b.weeks.length))
+    : 0;
 
   return (
     <>
@@ -100,9 +104,11 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
             <div className="flex items-center gap-3">
               <span className="rounded-lg bg-accent-soft p-2.5 text-accent"><ListChecks className="size-5" aria-hidden /></span>
               <div>
-                <dt className="text-xs font-medium text-ink-soft">Program</dt>
+                <dt className="text-xs font-medium text-ink-soft">Müfredat</dt>
                 <dd className="font-display text-xl font-bold">
-                  {syllabus.length > 0 ? `${syllabus.length} haftalık müfredat` : `${educationModule.features.length} net çıktı`}
+                  {hasBundleSyllabus
+                    ? `${minWeeks}–${maxWeeks} haftalık paketler`
+                    : `${educationModule.features.length} net çıktı`}
                 </dd>
               </div>
             </div>
@@ -110,7 +116,9 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
         </Reveal>
       </section>
 
-      <SyllabusTimeline weeks={syllabus} />
+      {hasBundleSyllabus && (
+        <BundleComparisonSection moduleTitle={educationModule.title} bundles={bundles} />
+      )}
 
       <section className="mx-auto grid max-w-6xl gap-12 px-3 py-16 sm:px-6 md:grid-cols-[2fr_1fr]">
         <div>
@@ -165,7 +173,16 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
             >
               Kayıt Ol, Fiyatları Gör
             </Link>
-            <PackagesDialog moduleTitle={educationModule.title} bundles={bundles} />
+            {hasBundleSyllabus ? (
+              <a
+                href="#paketleri-karsilastir"
+                className="inline-flex justify-center rounded-xl border border-accent px-6 py-3 font-semibold text-accent transition-colors hover:bg-accent-soft"
+              >
+                Paketleri Karşılaştır
+              </a>
+            ) : (
+              <PackagesDialog moduleTitle={educationModule.title} bundles={bundles} />
+            )}
           </div>
         </aside>
         </Reveal>
