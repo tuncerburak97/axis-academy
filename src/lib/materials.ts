@@ -32,10 +32,11 @@ export type MaterialFileErrorCode = "file_too_large" | "invalid_type" | "upload_
 
 export function materialAdminPath(classId: string, error?: string, saved?: boolean): string {
   const params = new URLSearchParams();
+  params.set("tab", "materials");
   if (saved) params.set("saved", "1");
   if (error) params.set("error", error);
   const query = params.toString();
-  return `/admin/siniflar/${classId}${query ? `?${query}` : ""}`;
+  return `/admin/siniflar/${classId}?${query}`;
 }
 
 export function getFileExtension(filename: string): string {

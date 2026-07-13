@@ -5,6 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, CalendarDays, Clock, Layers } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getModuleSyllabus } from "@/lib/queries/catalog";
+import { getClassAnnouncements } from "@/lib/queries/admin-classes";
 import { ClassDetailTabs } from "@/components/panel/class-detail-tabs";
 import type { ClassMaterial } from "@/lib/types/catalog";
 import type { MaterialWithUrl } from "@/components/panel/class-materials-tabs";
@@ -41,7 +42,10 @@ export default async function MemberClassContentPage({ params }: { params: Promi
   if (!trainingClass) notFound();
   const materials = (materialsResult.data ?? []) as ClassMaterial[];
 
-  const syllabus = await getModuleSyllabus(trainingClass.module_id);
+  const [syllabus, announcements] = await Promise.all([
+    getModuleSyllabus(trainingClass.module_id),
+    getClassAnnouncements(id),
+  ]);
 
   const signedUrlMap = new Map<string, string>();
   const filePaths = materials.filter((m) => m.file_path).map((m) => m.file_path!);
@@ -98,6 +102,7 @@ export default async function MemberClassContentPage({ params }: { params: Promi
           currentWeekOverride={trainingClass.current_week_override}
           syllabus={syllabus}
           materials={materialsWithUrls}
+          announcements={announcements}
         />
       </div>
     </>

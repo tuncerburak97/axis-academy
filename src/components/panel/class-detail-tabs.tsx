@@ -13,10 +13,11 @@ import {
   type ClassProgressSnapshot,
 } from "@/lib/syllabus";
 import { isPdfPath } from "@/lib/materials";
-import type { ClassMaterial, SyllabusWeek } from "@/lib/types/catalog";
+import { ClassAnnouncementsList } from "@/components/panel/class-announcements-list";
+import type { ClassAnnouncement, ClassMaterial, SyllabusWeek } from "@/lib/types/catalog";
 import type { MaterialWithUrl } from "@/components/panel/class-materials-tabs";
 
-type ClassTab = "progress" | "syllabus" | "lessons" | "homework";
+type ClassTab = "progress" | "syllabus" | "lessons" | "homework" | "announcements";
 
 interface ClassDetailTabsProps {
   startDate: string;
@@ -24,6 +25,7 @@ interface ClassDetailTabsProps {
   currentWeekOverride: number | null;
   syllabus: SyllabusWeek[];
   materials: MaterialWithUrl[];
+  announcements: ClassAnnouncement[];
 }
 
 const tabLabels: Record<ClassTab, string> = {
@@ -31,6 +33,7 @@ const tabLabels: Record<ClassTab, string> = {
   syllabus: "Müfredat",
   lessons: "Dersler",
   homework: "Ödevler",
+  announcements: "Duyurular",
 };
 
 export function ClassDetailTabs({
@@ -39,6 +42,7 @@ export function ClassDetailTabs({
   currentWeekOverride,
   syllabus,
   materials,
+  announcements,
 }: ClassDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<ClassTab>("progress");
 
@@ -59,6 +63,7 @@ export function ClassDetailTabs({
     { id: "syllabus", count: syllabus.length },
     { id: "lessons", count: lessons.length },
     { id: "homework", count: homework.length },
+    { id: "announcements", count: announcements.length },
   ];
 
   return (
@@ -112,6 +117,9 @@ export function ClassDetailTabs({
             items={homework}
             emptyMessage="Henüz ödev verilmedi. Yeni ödevler burada görünecek."
           />
+        )}
+        {activeTab === "announcements" && (
+          <ClassAnnouncementsList announcements={announcements} />
         )}
       </div>
     </div>

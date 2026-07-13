@@ -13,9 +13,50 @@ import {
 } from "@/lib/materials";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-function revalidateClasses() {
+function revalidateClasses(classId?: string) {
   revalidatePath("/admin/siniflar");
-  revalidatePath("/panel");
+  if (classId) {
+    revalidatePath(`/admin/siniflar/${classId}`);
+    revalidatePath(`/panel/sinif/${classId}`);
+  } else {
+    revalidatePath("/panel");
+  }
+}
+
+type ClassListTab = "classes" | "pending";
+type ClassDetailTab = "general" | "students" | "announcements" | "materials";
+
+function classListPath(opts?: { tab?: ClassListTab; error?: string; saved?: boolean }) {
+  const params = new URLSearchParams();
+  if (opts?.tab) params.set("tab", opts.tab);
+  if (opts?.error) params.set("error", opts.error);
+  if (opts?.saved) params.set("saved", "1");
+  const query = params.toString();
+  return `/admin/siniflar${query ? `?${query}` : ""}`;
+}
+
+function classDetailPath(
+  classId: string,
+  opts?: { tab?: ClassDetailTab; error?: string; saved?: boolean },
+) {
+  const params = new URLSearchParams();
+  if (opts?.tab) params.set("tab", opts.tab);
+  if (opts?.error) params.set("error", opts.error);
+  if (opts?.saved) params.set("saved", "1");
+  const query = params.toString();
+  return `/admin/siniflar/${classId}${query ? `?${query}` : ""}`;
+}
+
+function enrollmentReturnPath(formData: FormData): string {
+  const returnTo = formData.get("return_to");
+  if (typeof returnTo === "string" && returnTo.startsWith("/admin/siniflar")) {
+    return returnTo;
+  }
+  const classId = formData.get("class_id");
+  if (typeof classId === "string" && classId.length > 0) {
+    return classDetailPath(classId, { tab: "students", saved: true });
+  }
+  return classListPath({ tab: "pending", saved: true });
 }
 
 const classSchema = z.object({
@@ -40,13 +81,13 @@ export async function createClass(formData: FormData): Promise<void> {
     duration_hours: formData.get("duration_hours"),
     capacity: formData.get("capacity"),
   });
-  if (!parsed.success) redirect("/admin/siniflar?error=validation");
+  if (!parsed.success) redirect(classListPath({ error: "validation" }));
 
-  const { error } = await supabase.from("classes").insert(parsed.data);
-  if (error) redirect("/admin/siniflar?error=db");
+  const { data, error } = await supabase.from("classes").insert(parsed.data).select("id").single();
+  if (error || !data) redirect(classListPath({ error: "db" }));
 
-  revalidateClasses();
-  redirect("/admin/siniflar?saved=1");
+  revalidateClasses(data.id);
+  redirect(classDetailPath(data.id, { tab: "general", saved: true }));
 }
 
 const statusSchema = z.enum(["open", "full", "completed", "cancelled"]);
@@ -55,13 +96,13 @@ export async function updateClassStatus(formData: FormData): Promise<void> {
   const { supabase } = await requireAdmin();
   const classId = String(formData.get("class_id"));
   const parsed = statusSchema.safeParse(formData.get("status"));
-  if (!parsed.success) redirect("/admin/siniflar?error=validation");
+  if (!parsed.success) redirect(classDetailPath(classId, { tab: "general", error: "validation" }));
 
   const { error } = await supabase.from("classes").update({ status: parsed.data }).eq("id", classId);
-  if (error) redirect("/admin/siniflar?error=db");
+  if (error) redirect(classDetailPath(classId, { tab: "general", error: "db" }));
 
-  revalidateClasses();
-  redirect("/admin/siniflar?saved=1");
+  revalidateClasses(classId);
+  redirect(classDetailPath(classId, { tab: "general", saved: true }));
 }
 
 const classDetailsSchema = z.object({
@@ -81,7 +122,7 @@ export async function updateClassDetails(formData: FormData): Promise<void> {
     duration_weeks: formData.get("duration_weeks") ?? 0,
     current_week_override: formData.get("current_week_override") ?? "",
   });
-  if (!parsed.success) redirect("/admin/siniflar?error=validation");
+  if (!parsed.success) redirect(classDetailPath(String(formData.get("class_id")), { tab: "general", error: "validation" }));
 
   const { class_id, current_week_override, ...update } = parsed.data;
   const overrideValue =
@@ -91,11 +132,10 @@ export async function updateClassDetails(formData: FormData): Promise<void> {
     .from("classes")
     .update({ ...update, current_week_override: overrideValue })
     .eq("id", class_id);
-  if (error) redirect(`/admin/siniflar/${class_id}?error=db`);
+  if (error) redirect(classDetailPath(class_id, { tab: "general", error: "db" }));
 
-  revalidatePath(`/admin/siniflar/${class_id}`);
-  revalidatePath(`/panel/sinif/${class_id}`);
-  redirect(`/admin/siniflar/${class_id}?saved=1`);
+  revalidateClasses(class_id);
+  redirect(classDetailPath(class_id, { tab: "general", saved: true }));
 }
 
 const materialSchema = z.object({
@@ -255,11 +295,11 @@ export async function approveEnrollment(formData: FormData): Promise<void> {
   });
   if (error) {
     const reason = error.message.includes("CLASS_FULL") ? "full" : "db";
-    redirect(`/admin/siniflar?error=${reason}`);
+    redirect(enrollmentReturnPath(formData).replace("saved=1", `error=${reason}`));
   }
 
   revalidateClasses();
-  redirect("/admin/siniflar?saved=1");
+  redirect(enrollmentReturnPath(formData));
 }
 
 export async function rejectEnrollment(formData: FormData): Promise<void> {
@@ -273,5 +313,61 @@ export async function rejectEnrollment(formData: FormData): Promise<void> {
     .eq("status", "pending");
 
   revalidateClasses();
-  redirect("/admin/siniflar?saved=1");
+  redirect(enrollmentReturnPath(formData));
+}
+
+const announcementSchema = z.object({
+  class_id: z.string().uuid(),
+  title: z.string().min(2).max(200),
+  body: z.string().max(10000),
+});
+
+function announcementInputFromForm(formData: FormData) {
+  return {
+    class_id: formData.get("class_id"),
+    title: formData.get("title"),
+    body: formData.get("body") ?? "",
+  };
+}
+
+export async function createAnnouncement(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const parsed = announcementSchema.safeParse(announcementInputFromForm(formData));
+  const classId = String(formData.get("class_id"));
+  if (!parsed.success) redirect(classDetailPath(classId, { tab: "announcements", error: "validation" }));
+
+  const { error } = await supabase.from("class_announcements").insert(parsed.data);
+  if (error) redirect(classDetailPath(classId, { tab: "announcements", error: "db" }));
+
+  revalidateClasses(classId);
+  redirect(classDetailPath(classId, { tab: "announcements", saved: true }));
+}
+
+export async function updateAnnouncement(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const announcementId = String(formData.get("announcement_id"));
+  const parsed = announcementSchema.safeParse(announcementInputFromForm(formData));
+  const classId = String(formData.get("class_id"));
+  if (!parsed.success) redirect(classDetailPath(classId, { tab: "announcements", error: "validation" }));
+
+  const { error } = await supabase
+    .from("class_announcements")
+    .update({ title: parsed.data.title, body: parsed.data.body, updated_at: new Date().toISOString() })
+    .eq("id", announcementId);
+  if (error) redirect(classDetailPath(classId, { tab: "announcements", error: "db" }));
+
+  revalidateClasses(classId);
+  redirect(classDetailPath(classId, { tab: "announcements", saved: true }));
+}
+
+export async function deleteAnnouncement(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const announcementId = String(formData.get("announcement_id"));
+  const classId = String(formData.get("class_id"));
+
+  const { error } = await supabase.from("class_announcements").delete().eq("id", announcementId);
+  if (error) redirect(classDetailPath(classId, { tab: "announcements", error: "db" }));
+
+  revalidateClasses(classId);
+  redirect(classDetailPath(classId, { tab: "announcements", saved: true }));
 }

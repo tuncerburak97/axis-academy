@@ -26,6 +26,7 @@ npm run dev
    - `0007_admin_delete_policies.sql` — admin hard delete RLS politikaları
    - `0008_module_syllabus.sql` — haftalık müfredat + sınıf güncel hafta override
    - `0009_bundle_syllabus.sql` — paket bazlı hibrit müfredat (çekirdek + özel haftalar)
+   - `0010_class_announcements.sql` — sınıf duyuruları (admin yönetir, kayıtlı öğrenciler panelde görür)
 3. Authentication → Providers'tan **Email** (doğrulama açık) ve **Google** sağlayıcılarını etkinleştir.
 4. Storage bucket'ları `0006` migration ile otomatik oluşur. Eski kurulumlarda manuel oluşturmak istersen **private** bucket'lar:
    - `request-files` — analiz/tez talep dosyaları

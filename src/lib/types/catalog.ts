@@ -80,6 +80,36 @@ export interface ClassMaterial {
   created_at: string;
 }
 
+export interface ClassAnnouncement {
+  id: string;
+  class_id: string;
+  title: string;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClassEnrollmentRow {
+  id: string;
+  class_id: string;
+  user_id: string;
+  status: EnrollmentStatus;
+  created_at: string;
+  profiles: { full_name: string; email: string } | null;
+}
+
+export interface AdminClassRow {
+  id: string;
+  module_id: string;
+  title: string;
+  start_date: string;
+  duration_hours: number;
+  capacity: number;
+  status: ClassStatus;
+  education_modules: { title: string; category: ModuleCategory } | null;
+  class_enrollments: { status: string }[];
+}
+
 export interface SyllabusWeek {
   id: string;
   module_id: string;
