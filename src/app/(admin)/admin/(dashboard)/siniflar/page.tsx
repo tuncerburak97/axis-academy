@@ -4,6 +4,8 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getAllModules } from "@/lib/queries/catalog";
 import { approveEnrollment, createClass, rejectEnrollment, updateClassStatus } from "@/lib/actions/admin-classes";
+import { deleteClass } from "@/lib/actions/admin-delete";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { classStatusLabels, categoryLabels } from "@/lib/types/catalog";
 import type { ClassStatus } from "@/lib/types/catalog";
 import { NumberInput, SelectField, StatusBanner, SubmitButton, TextInput } from "@/components/admin/fields";
@@ -145,6 +147,15 @@ export default async function ClassManagementPage({
                 >
                   İçerik ve Doküman Yönetimi →
                 </a>
+                <div className="mt-4 border-t border-line pt-4">
+                  <ConfirmDeleteButton
+                    action={deleteClass}
+                    hiddenFields={[{ name: "class_id", value: trainingClass.id }]}
+                    label="Sınıfı Sil"
+                    confirmTitle="Sınıfı kalıcı olarak sil?"
+                    confirmMessage={`"${trainingClass.title}" ve tüm materyalleri silinecek.`}
+                  />
+                </div>
               </details>
             );
           })}

@@ -5,6 +5,12 @@ import { Download } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { updateContactRequest, updateIndividualRequest, updateInquiry } from "@/lib/actions/admin-requests";
 import {
+  deleteContactRequest,
+  deleteIndividualRequest,
+  deleteInquiry,
+} from "@/lib/actions/admin-delete";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
+import {
   contactStatusLabels,
   inquiryStatusLabels,
   requestStatusLabels,
@@ -148,6 +154,15 @@ export default async function RequestManagementPage({
                 <TextArea label="Admin notu (kullanıcı görmez)" name="admin_notes" defaultValue={request.admin_notes} rows={2} />
                 <SubmitButton>Kaydet</SubmitButton>
               </form>
+              <div className="mt-3 border-t border-line pt-3">
+                <ConfirmDeleteButton
+                  action={deleteContactRequest}
+                  hiddenFields={[{ name: "request_id", value: request.id }]}
+                  label="Talebi Sil"
+                  confirmTitle="Analiz/tez talebini sil?"
+                  confirmMessage="Talep kaydı ve varsa ekli dosya kalıcı olarak silinecek."
+                />
+              </div>
             </details>
           ))}
           {contactRequests.length === 0 && (
@@ -221,6 +236,15 @@ export default async function RequestManagementPage({
                 <TextArea label="Admin notu (kullanıcı görmez)" name="admin_notes" defaultValue={request.admin_notes} rows={2} />
                 <SubmitButton>Kaydet</SubmitButton>
               </form>
+              <div className="mt-3 border-t border-line pt-3">
+                <ConfirmDeleteButton
+                  action={deleteIndividualRequest}
+                  hiddenFields={[{ name: "request_id", value: request.id }]}
+                  label="Talebi Sil"
+                  confirmTitle="Bireysel eğitim talebini sil?"
+                  confirmMessage="Talep kaydı kalıcı olarak silinecek."
+                />
+              </div>
             </details>
           ))}
           {individualRequests.length === 0 && (
@@ -265,6 +289,15 @@ export default async function RequestManagementPage({
                 <TextArea label="Admin notu" name="admin_notes" defaultValue={inquiry.admin_notes} rows={2} />
                 <SubmitButton>Kaydet</SubmitButton>
               </form>
+              <div className="mt-3 border-t border-line pt-3">
+                <ConfirmDeleteButton
+                  action={deleteInquiry}
+                  hiddenFields={[{ name: "inquiry_id", value: inquiry.id }]}
+                  label="Mesajı Sil"
+                  confirmTitle="İletişim mesajını sil?"
+                  confirmMessage={`${inquiry.name} tarafından gönderilen mesaj kalıcı olarak silinecek.`}
+                />
+              </div>
             </details>
           ))}
           {inquiries.length === 0 && (

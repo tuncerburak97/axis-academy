@@ -11,6 +11,8 @@ import { getContent } from "@/lib/queries/content";
 import { defaultEducationIntro, type EducationIntroContent } from "@/lib/types/content";
 import { categoryBadgeClasses, categoryImages } from "@/lib/images";
 import { Reveal } from "@/components/public/motion-primitives";
+import { TrustStrip } from "@/components/public/marketing";
+import { CheckCircle2, Layers, Users } from "lucide-react";
 
 export const metadata: Metadata = { title: "Eğitim" };
 
@@ -29,6 +31,13 @@ export default async function EducationPage() {
   return (
     <>
       <PageIntro eyebrow="Hizmet" title={intro.title} description={intro.description} />
+      <TrustStrip
+        items={[
+          { icon: Layers, title: "Hazır paketler", subtitle: "Excel · Word · PowerPoint" },
+          { icon: Users, title: "Sınıf eğitimleri", subtitle: "Açık kontenjanlar" },
+          { icon: CheckCircle2, title: "Kişiye özel modül", subtitle: "Üyelere özel fiyat matrisi" },
+        ]}
+      />
       <section className="mx-auto max-w-6xl px-3 py-16 sm:px-6">
         {modules.length === 0 ? (
           <p className="rounded-xl border border-dashed border-line bg-surface p-8 text-center text-ink-soft">

@@ -14,6 +14,8 @@ import {
   updateBundle,
   deleteBundle,
 } from "@/lib/actions/admin-catalog";
+import { deleteModule } from "@/lib/actions/admin-delete";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { categoryLabels, priceUnitLabels, trainingTypeLabels } from "@/lib/types/catalog";
 import type { BundlePackage, PricingPlan } from "@/lib/types/catalog";
 import {
@@ -141,6 +143,23 @@ export default async function ModuleDetailPage({
             <SubmitButton>Paket Ekle</SubmitButton>
           </form>
         </details>
+      </section>
+
+      <section aria-labelledby="danger-heading" className="mt-10 max-w-2xl rounded-xl border border-red-200 bg-red-50/50 p-6">
+        <h2 id="danger-heading" className="font-display text-lg font-semibold text-red-800">Tehlikeli Bölge</h2>
+        <p className="mt-1 text-sm text-red-700">
+          Modülü silmek bağlı sınıfları, materyalleri ve fiyat planlarını da kaldırır.
+        </p>
+        <div className="mt-4">
+          <ConfirmDeleteButton
+            action={deleteModule}
+            hiddenFields={[{ name: "module_id", value: educationModule.id }]}
+            label="Modülü Sil"
+            confirmTitle="Modülü kalıcı olarak sil?"
+            confirmMessage={`"${educationModule.title}" ve tüm bağlı veriler silinecek.`}
+            variant="button"
+          />
+        </div>
       </section>
     </>
   );

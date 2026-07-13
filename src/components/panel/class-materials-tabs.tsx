@@ -5,6 +5,8 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Download, FileText } from "lucide-react";
+import { isPdfPath } from "@/lib/materials";
+import { PdfPreview } from "@/components/panel/pdf-preview";
 import { materialCategoryLabels } from "@/lib/types/catalog";
 import type { ClassMaterial, MaterialCategory } from "@/lib/types/catalog";
 
@@ -87,12 +89,19 @@ export function ClassMaterialsTabs({ materials }: ClassMaterialsTabsProps) {
             )}
 
             {material.signedUrl && (
-              <a
-                href={material.signedUrl}
-                className="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-accent-soft px-4 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
-              >
-                <Download className="size-4" aria-hidden /> Dokümanı İndir
-              </a>
+              <div className="mt-4 space-y-3">
+                <a
+                  href={material.signedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-accent-soft px-4 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
+                >
+                  <Download className="size-4" aria-hidden /> Dokümanı İndir
+                </a>
+                {material.file_path && isPdfPath(material.file_path) && (
+                  <PdfPreview url={material.signedUrl} title={material.title} />
+                )}
+              </div>
             )}
           </article>
         ))}

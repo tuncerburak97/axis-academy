@@ -1,9 +1,8 @@
-// src/app/(admin)/admin/(dashboard)/siniflar/[id]/page.tsx — eğitim içerik yönetimi:
-// genel bilgiler + kategori bazlı materyal (doküman/MD not/ödev) CRUD
+// src/app/(admin)/admin/(dashboard)/siniflar/[id]/page.tsx — eğitim içerik yönetimi + dosya önizleme
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, FileText, Paperclip } from "lucide-react";
+import { ArrowLeft, Download, FileText, Paperclip } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   createMaterial,
@@ -11,8 +10,10 @@ import {
   updateClassDetails,
   updateMaterial,
 } from "@/lib/actions/admin-classes";
+import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { materialCategoryLabels } from "@/lib/types/catalog";
 import type { ClassMaterial, MaterialCategory } from "@/lib/types/catalog";
+import { isPdfPath } from "@/lib/materials";
 import {
   NumberInput,
   SelectField,
@@ -27,6 +28,9 @@ export const dynamic = "force-dynamic";
 
 const categoryOptions = Object.entries(materialCategoryLabels).map(([value, label]) => ({ value, label }));
 const categoryOrder: MaterialCategory[] = ["general", "weekly", "homework", "note"];
+
+const fileInputClass =
+  "mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-accent";
 
 export default async function ClassContentManagementPage({
   params,
@@ -53,6 +57,15 @@ export default async function ClassContentManagementPage({
   if (!trainingClass) notFound();
   const materials = (materialsResult.data ?? []) as ClassMaterial[];
 
+  const signedUrlMap = new Map<string, string>();
+  const filePaths = materials.filter((m) => m.file_path).map((m) => m.file_path!);
+  if (filePaths.length > 0) {
+    const { data: signed } = await supabase.storage.from("class-materials").createSignedUrls(filePaths, 3600);
+    signed?.forEach((entry) => {
+      if (entry.signedUrl && entry.path) signedUrlMap.set(entry.path, entry.signedUrl);
+    });
+  }
+
   return (
     <>
       <Link href="/admin/siniflar" className="inline-flex items-center gap-1 text-sm font-semibold text-ink-soft hover:text-ink">
@@ -67,7 +80,6 @@ export default async function ClassContentManagementPage({
         <StatusBanner saved={saved} error={error} />
       </div>
 
-      {/* Eğitim genel bilgileri */}
       <section aria-labelledby="class-info-heading" className="max-w-2xl rounded-xl border border-line bg-white p-6 shadow-sm">
         <h2 id="class-info-heading" className="font-display text-lg font-semibold">Eğitim Bilgileri</h2>
         <form action={updateClassDetails} className="mt-4 space-y-4">
@@ -85,7 +97,6 @@ export default async function ClassContentManagementPage({
         </form>
       </section>
 
-      {/* Materyaller: kategori bazlı */}
       {categoryOrder.map((category) => {
         const categoryMaterials = materials.filter((material) => material.category === category);
         return (
@@ -95,37 +106,77 @@ export default async function ClassContentManagementPage({
               <span className="ml-2 text-sm font-normal text-ink-soft">({categoryMaterials.length})</span>
             </h2>
             <div className="mt-3 space-y-3">
-              {categoryMaterials.map((material) => (
-                <details key={material.id} className="rounded-xl border border-line bg-white p-5 shadow-sm">
-                  <summary className="flex cursor-pointer flex-wrap items-center gap-3 text-sm">
-                    <FileText className="size-4 text-accent" aria-hidden />
-                    <span className="font-semibold">{material.title}</span>
-                    {material.week_number && (
-                      <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">
-                        Hafta {material.week_number}
-                      </span>
+              {categoryMaterials.map((material) => {
+                const signedUrl = material.file_path ? signedUrlMap.get(material.file_path) : null;
+                return (
+                  <details key={material.id} className="rounded-xl border border-line bg-white p-5 shadow-sm">
+                    <summary className="flex min-h-11 cursor-pointer flex-wrap items-center gap-3 text-sm">
+                      <FileText className="size-4 text-accent" aria-hidden />
+                      <span className="font-semibold">{material.title}</span>
+                      {material.week_number && (
+                        <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">
+                          Hafta {material.week_number}
+                        </span>
+                      )}
+                      {material.file_path && (
+                        <span className="inline-flex items-center gap-1 text-xs text-ink-soft">
+                          <Paperclip className="size-3.5" aria-hidden />
+                          {material.file_path.split("/").pop()}
+                        </span>
+                      )}
+                    </summary>
+                    {signedUrl && (
+                      <div className="mt-3 flex flex-wrap gap-3">
+                        <a
+                          href={signedUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-line px-3 py-2 text-sm font-semibold text-accent hover:bg-accent-soft"
+                        >
+                          <Download className="size-4" aria-hidden /> Dosyayı Aç
+                        </a>
+                        {isPdfPath(material.file_path!) && (
+                          <iframe
+                            src={signedUrl}
+                            title={`${material.title} önizleme`}
+                            className="h-48 w-full rounded-lg border border-line sm:h-64"
+                          />
+                        )}
+                      </div>
                     )}
-                    {material.file_path && (
-                      <span className="inline-flex items-center gap-1 text-xs text-ink-soft">
-                        <Paperclip className="size-3.5" aria-hidden /> dosya ekli
-                      </span>
-                    )}
-                  </summary>
-                  <form action={updateMaterial} className="mt-4 space-y-4">
-                    <input type="hidden" name="material_id" value={material.id} />
-                    <input type="hidden" name="class_id" value={trainingClass.id} />
-                    <MaterialFields material={material} />
-                    <SubmitButton>Güncelle</SubmitButton>
-                  </form>
-                  <form action={deleteMaterial} className="mt-2">
-                    <input type="hidden" name="material_id" value={material.id} />
-                    <input type="hidden" name="class_id" value={trainingClass.id} />
-                    <button type="submit" className="text-sm font-semibold text-red-700 hover:underline">
-                      Materyali Sil
-                    </button>
-                  </form>
-                </details>
-              ))}
+                    <form action={updateMaterial} className="mt-4 space-y-4">
+                      <input type="hidden" name="material_id" value={material.id} />
+                      <input type="hidden" name="class_id" value={trainingClass.id} />
+                      <MaterialFields material={material} />
+                      <div>
+                        <label htmlFor={`file-${material.id}`} className="block text-sm font-medium">
+                          Dosyayı değiştir <span className="font-normal text-ink-soft">(isteğe bağlı)</span>
+                        </label>
+                        <input
+                          id={`file-${material.id}`}
+                          name="file"
+                          type="file"
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.md"
+                          className={fileInputClass}
+                        />
+                      </div>
+                      <SubmitButton>Güncelle</SubmitButton>
+                    </form>
+                    <div className="mt-3">
+                      <ConfirmDeleteButton
+                        action={deleteMaterial}
+                        hiddenFields={[
+                          { name: "material_id", value: material.id },
+                          { name: "class_id", value: trainingClass.id },
+                        ]}
+                        label="Materyali Sil"
+                        confirmTitle="Materyali sil?"
+                        confirmMessage={`"${material.title}" kalıcı olarak silinecek.`}
+                      />
+                    </div>
+                  </details>
+                );
+              })}
               {categoryMaterials.length === 0 && (
                 <p className="rounded-xl border border-dashed border-line bg-white p-4 text-sm text-ink-soft">
                   Bu kategoride materyal yok.
@@ -136,25 +187,24 @@ export default async function ClassContentManagementPage({
         );
       })}
 
-      {/* Yeni materyal */}
       <section aria-labelledby="new-material-heading" className="mt-10 max-w-2xl rounded-xl border border-line bg-white p-6 shadow-sm">
         <h2 id="new-material-heading" className="font-display text-lg font-semibold">Yeni Materyal Ekle</h2>
         <p className="mt-1 text-xs text-ink-soft">
           Markdown içerik yazabilir, PDF/Word dosyası ekleyebilir ya da ikisini birlikte kullanabilirsin.
         </p>
-        <form action={createMaterial} className="mt-4 space-y-4">
+        <form action={createMaterial} className="mt-4 space-y-4" encType="multipart/form-data">
           <input type="hidden" name="class_id" value={trainingClass.id} />
           <MaterialFields />
           <div>
             <label htmlFor="material-file" className="block text-sm font-medium">
-              Dosya <span className="font-normal text-ink-soft">(isteğe bağlı, max 20MB — PDF, Word, Excel…)</span>
+              Dosya <span className="font-normal text-ink-soft">(isteğe bağlı, max 20MB)</span>
             </label>
             <input
               id="material-file"
               name="file"
               type="file"
               accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.md"
-              className="mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-accent"
+              className={fileInputClass}
             />
           </div>
           <SubmitButton>Materyal Ekle</SubmitButton>
@@ -167,14 +217,14 @@ export default async function ClassContentManagementPage({
 function MaterialFields({ material }: { material?: ClassMaterial }) {
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <SelectField label="Kategori" name="category" defaultValue={material?.category} options={categoryOptions} />
         <NumberInput label="Hafta no (haftalık ise)" name="week_number" defaultValue={material?.week_number ?? undefined} min={1} />
         <NumberInput label="Sıra" name="sort_order" defaultValue={material?.sort_order ?? 0} min={0} />
       </div>
       <TextInput label="Başlık" name="title" defaultValue={material?.title} required />
       <TextArea
-        label="İçerik (Markdown — başlık, liste, tablo desteklenir)"
+        label="İçerik (Markdown)"
         name="content_md"
         defaultValue={material?.content_md}
         rows={8}

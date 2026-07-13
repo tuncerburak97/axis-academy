@@ -5,6 +5,13 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/actions/admin-guard";
+import {
+  buildMaterialStoragePath,
+  mapUploadError,
+  materialAdminPath,
+  validateMaterialFile,
+} from "@/lib/materials";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 function revalidateClasses() {
   revalidatePath("/admin/siniflar");
@@ -82,8 +89,6 @@ export async function updateClassDetails(formData: FormData): Promise<void> {
   redirect(`/admin/siniflar/${class_id}?saved=1`);
 }
 
-const MAX_MATERIAL_FILE_SIZE = 20 * 1024 * 1024; // 20MB
-
 const materialSchema = z.object({
   class_id: z.string().uuid(),
   category: z.enum(["general", "weekly", "homework", "note"]),
@@ -104,22 +109,42 @@ function materialInputFromForm(formData: FormData) {
   };
 }
 
+async function uploadMaterialFile(
+  supabase: SupabaseClient,
+  classId: string,
+  file: File,
+): Promise<{ filePath: string } | { error: string }> {
+  const validation = validateMaterialFile(file);
+  if (!validation.ok) return { error: validation.code };
+
+  const filePath = buildMaterialStoragePath(classId, file.name);
+  const { error: uploadError } = await supabase.storage.from("class-materials").upload(filePath, file, {
+    upsert: false,
+    contentType: file.type || undefined,
+  });
+  if (uploadError) return { error: mapUploadError(uploadError.message) };
+  return { filePath };
+}
+
+async function removeStorageFile(supabase: SupabaseClient, filePath: string | null | undefined) {
+  if (!filePath) return;
+  await supabase.storage.from("class-materials").remove([filePath]);
+}
+
 // Yeni materyal: MD içerik ve/veya dosya (private 'class-materials' bucket'ına)
 export async function createMaterial(formData: FormData): Promise<void> {
   const { supabase } = await requireAdmin();
 
   const parsed = materialSchema.safeParse(materialInputFromForm(formData));
-  if (!parsed.success) redirect(`/admin/siniflar/${formData.get("class_id")}?error=validation`);
+  const classId = String(formData.get("class_id"));
+  if (!parsed.success) redirect(materialAdminPath(classId, "validation"));
 
   let filePath: string | null = null;
   const file = formData.get("file");
   if (file instanceof File && file.size > 0) {
-    if (file.size > MAX_MATERIAL_FILE_SIZE) {
-      redirect(`/admin/siniflar/${parsed.data.class_id}?error=validation`);
-    }
-    filePath = `${parsed.data.class_id}/${crypto.randomUUID()}-${file.name}`;
-    const { error: uploadError } = await supabase.storage.from("class-materials").upload(filePath, file);
-    if (uploadError) redirect(`/admin/siniflar/${parsed.data.class_id}?error=db`);
+    const upload = await uploadMaterialFile(supabase, parsed.data.class_id, file);
+    if ("error" in upload) redirect(materialAdminPath(parsed.data.class_id, upload.error));
+    filePath = upload.filePath;
   }
 
   const { class_id, week_number, ...rest } = parsed.data;
@@ -129,10 +154,13 @@ export async function createMaterial(formData: FormData): Promise<void> {
     week_number: week_number === "" || week_number === undefined ? null : week_number,
     file_path: filePath,
   });
-  if (error) redirect(`/admin/siniflar/${class_id}?error=db`);
+  if (error) {
+    if (filePath) await removeStorageFile(supabase, filePath);
+    redirect(materialAdminPath(class_id, "db"));
+  }
 
-  revalidatePath(`/admin/siniflar/${class_id}`);
-  redirect(`/admin/siniflar/${class_id}?saved=1`);
+  revalidatePath(materialAdminPath(class_id));
+  redirect(materialAdminPath(class_id, undefined, true));
 }
 
 export async function updateMaterial(formData: FormData): Promise<void> {
@@ -140,7 +168,23 @@ export async function updateMaterial(formData: FormData): Promise<void> {
   const materialId = String(formData.get("material_id"));
 
   const parsed = materialSchema.safeParse(materialInputFromForm(formData));
-  if (!parsed.success) redirect(`/admin/siniflar/${formData.get("class_id")}?error=validation`);
+  const classId = String(formData.get("class_id"));
+  if (!parsed.success) redirect(materialAdminPath(classId, "validation"));
+
+  const { data: existing } = await supabase
+    .from("class_materials")
+    .select("file_path")
+    .eq("id", materialId)
+    .maybeSingle();
+
+  let nextFilePath = existing?.file_path ?? null;
+  const file = formData.get("file");
+  if (file instanceof File && file.size > 0) {
+    const upload = await uploadMaterialFile(supabase, parsed.data.class_id, file);
+    if ("error" in upload) redirect(materialAdminPath(parsed.data.class_id, upload.error));
+    if (existing?.file_path) await removeStorageFile(supabase, existing.file_path);
+    nextFilePath = upload.filePath;
+  }
 
   const { class_id, week_number, ...rest } = parsed.data;
   const { error } = await supabase
@@ -148,12 +192,13 @@ export async function updateMaterial(formData: FormData): Promise<void> {
     .update({
       ...rest,
       week_number: week_number === "" || week_number === undefined ? null : week_number,
+      file_path: nextFilePath,
     })
     .eq("id", materialId);
-  if (error) redirect(`/admin/siniflar/${class_id}?error=db`);
+  if (error) redirect(materialAdminPath(class_id, "db"));
 
-  revalidatePath(`/admin/siniflar/${class_id}`);
-  redirect(`/admin/siniflar/${class_id}?saved=1`);
+  revalidatePath(materialAdminPath(class_id));
+  redirect(materialAdminPath(class_id, undefined, true));
 }
 
 export async function deleteMaterial(formData: FormData): Promise<void> {
@@ -161,20 +206,34 @@ export async function deleteMaterial(formData: FormData): Promise<void> {
   const materialId = String(formData.get("material_id"));
   const classId = String(formData.get("class_id"));
 
-  // Varsa storage'daki dosyayı da temizle
   const { data: material } = await supabase
     .from("class_materials")
     .select("file_path")
     .eq("id", materialId)
     .maybeSingle();
-  if (material?.file_path) {
-    await supabase.storage.from("class-materials").remove([material.file_path]);
-  }
+  await removeStorageFile(supabase, material?.file_path);
 
   await supabase.from("class_materials").delete().eq("id", materialId);
 
-  revalidatePath(`/admin/siniflar/${classId}`);
-  redirect(`/admin/siniflar/${classId}?saved=1`);
+  revalidatePath(materialAdminPath(classId));
+  redirect(materialAdminPath(classId, undefined, true));
+}
+
+/** Sınıfa ait tüm materyal dosyalarını storage'dan temizler */
+export async function purgeClassMaterialFiles(
+  supabase: SupabaseClient,
+  classId: string,
+): Promise<void> {
+  const { data: materials } = await supabase
+    .from("class_materials")
+    .select("file_path")
+    .eq("class_id", classId);
+  const paths = (materials ?? [])
+    .map((row) => row.file_path)
+    .filter((path): path is string => Boolean(path));
+  if (paths.length > 0) {
+    await supabase.storage.from("class-materials").remove(paths);
+  }
 }
 
 // Onay: kontenjan kontrolü DB fonksiyonunda atomik yapılır

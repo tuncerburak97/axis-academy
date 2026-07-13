@@ -18,6 +18,7 @@ import { getContent } from "@/lib/queries/content";
 import { defaultHero, type HeroContent } from "@/lib/types/content";
 import { siteImages } from "@/lib/images";
 import { FadeUp, FloatingBadge, Reveal } from "@/components/public/motion-primitives";
+import { ProcessTimeline, StatBand, TrustStrip } from "@/components/public/marketing";
 
 const services = [
   {
@@ -179,32 +180,27 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <TrustStrip
+        items={[
+          { icon: ShieldCheck, title: "Uzman ekip", subtitle: "Akademik + kurumsal deneyim" },
+          { icon: Clock, title: "Esnek program", subtitle: "Sana uyan saatler" },
+          { icon: Sparkles, title: "Şeffaf süreç", subtitle: "Panelden anlık takip" },
+          { icon: GraduationCap, title: "Somut çıktı", subtitle: "Ertesi gün işinde kullan" },
+        ]}
+      />
+
+      <StatBand
+        stats={[
+          { value: 15, label: "Yıllık Eğitim Deneyimi" },
+          { value: 10000, suffix: "+", label: "Eğitim Verilen Katılımcı" },
+          { value: 150, label: "Kurumsal İş Birliği" },
+        ]}
+        title="Rakamlarla Axis Akademi"
+        description="Kurumsal eğitim ve akademik destek alanında birikmiş deneyim."
+      />
+
       {/* Nasıl çalışır */}
-      <section aria-labelledby="how-heading" className="py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-3 sm:px-6">
-          <Reveal>
-            <h2 id="how-heading" className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-              Nasıl çalışır?
-            </h2>
-          </Reveal>
-          <ol className="mt-10 grid gap-8 md:grid-cols-3">
-            {steps.map((step, index) => (
-              <Reveal key={step.title} delay={index * 0.12}>
-                <li>
-                  <span className="flex size-12 items-center justify-center rounded-xl bg-accent text-white shadow-sm">
-                    <step.icon className="size-6" aria-hidden />
-                  </span>
-                  <p className="mt-4 font-display text-lg font-semibold">
-                    <span className="mr-2 text-accent">{index + 1}.</span>
-                    {step.title}
-                  </p>
-                  <p className="mt-2 text-sm leading-relaxed text-ink-soft">{step.description}</p>
-                </li>
-              </Reveal>
-            ))}
-          </ol>
-        </div>
-      </section>
+      <ProcessTimeline steps={steps} title="Nasıl çalışır?" />
 
       {/* Kayıt CTA bandı */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">

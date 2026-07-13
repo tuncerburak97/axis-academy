@@ -16,7 +16,8 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { siteImages } from "@/lib/images";
-import { FadeUp, Reveal, StatCounter } from "@/components/public/motion-primitives";
+import { FadeUp, Reveal } from "@/components/public/motion-primitives";
+import { FeatureCard, StatBand } from "@/components/public/marketing";
 
 export const metadata: Metadata = { title: "Hakkımızda" };
 
@@ -121,16 +122,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* Sayaçlı istatistik bandı */}
-      <section aria-label="Rakamlarla Axis Akademi" className="mx-auto max-w-6xl px-3 py-16 sm:px-6">
-        <Reveal>
-          <div className="grid gap-10 rounded-2xl border border-line bg-white px-4 py-8 shadow-sm sm:px-8 sm:py-10 sm:grid-cols-2 lg:grid-cols-4">
-            {stats.map((stat) => (
-              <StatCounter key={stat.label} value={stat.value} label={stat.label} />
-            ))}
-          </div>
-        </Reveal>
-      </section>
+      <StatBand stats={stats} />
 
       {/* Kadro */}
       <section aria-labelledby="team-heading" className="bg-surface py-16 md:py-20">
@@ -143,15 +135,13 @@ export default function AboutPage() {
           </Reveal>
           <div className="mt-10 grid gap-6 md:grid-cols-3">
             {teamProfiles.map((profile, index) => (
-              <Reveal key={profile.title} delay={index * 0.12}>
-                <div className="flex h-full flex-col rounded-2xl border border-line bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-                  <span className="inline-flex w-fit rounded-lg bg-accent-soft p-3 text-accent">
-                    <profile.icon className="size-6" aria-hidden />
-                  </span>
-                  <h3 className="mt-4 font-display text-xl font-semibold">{profile.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-ink-soft">{profile.description}</p>
-                </div>
-              </Reveal>
+              <FeatureCard
+                key={profile.title}
+                icon={profile.icon}
+                title={profile.title}
+                description={profile.description}
+                delay={index * 0.12}
+              />
             ))}
           </div>
         </div>
@@ -166,15 +156,14 @@ export default function AboutPage() {
         </Reveal>
         <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {values.map((value, index) => (
-            <Reveal key={value.title} delay={index * 0.1}>
-              <div className="h-full rounded-2xl border border-line bg-white p-5 shadow-sm">
-                <span className="inline-flex rounded-lg bg-amber-soft p-2.5 text-ink">
-                  <value.icon className="size-5" aria-hidden />
-                </span>
-                <h3 className="mt-3 font-display font-semibold">{value.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-ink-soft">{value.description}</p>
-              </div>
-            </Reveal>
+            <FeatureCard
+              key={value.title}
+              icon={value.icon}
+              title={value.title}
+              description={value.description}
+              delay={index * 0.1}
+              variant="compact"
+            />
           ))}
         </div>
       </section>

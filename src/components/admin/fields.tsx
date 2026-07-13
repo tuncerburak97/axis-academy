@@ -91,6 +91,15 @@ export function StatusBanner({ saved, error }: { saved?: string; error?: string 
     full: "Sınıf kontenjanı dolu — onay verilemedi. Sınıf durumu 'Dolu' olarak işaretlendi.",
     already: "Bu sınıf için zaten bir katılım isteğin var.",
     notopen: "Bu sınıf şu anda kayda açık değil.",
+    file_too_large: "Dosya 20MB sınırını aşıyor. Daha küçük bir dosya seçin.",
+    invalid_type: "Bu dosya türü desteklenmiyor. PDF, Word, Excel, PowerPoint veya ZIP yükleyin.",
+    upload_failed: "Dosya yüklenemedi. Bucket kurulumunu ve bağlantıyı kontrol edin.",
+    bucket_missing: "Storage bucket bulunamadı. 0006_storage_buckets.sql migration'ını çalıştırın.",
+    delete_failed: "Silme işlemi başarısız. Kayıt başka bir veriye bağlı olabilir.",
+    self_delete: "Kendi hesabınızı silemezsiniz.",
+    last_admin: "Son admin hesabı silinemez.",
+    no_service_key: "SUPABASE_SECRET_KEY tanımlı değil — kullanıcı silme devre dışı.",
+    not_found: "Kayıt bulunamadı.",
   };
   return (
     <p role="alert" className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">

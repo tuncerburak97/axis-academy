@@ -22,11 +22,14 @@ npm run dev
    - `0003_member.sql`
    - `0004_admin_management.sql`
    - `0005_courses_inquiries.sql`
+   - `0006_storage_buckets.sql` — storage bucket'ları otomatik oluşturur
+   - `0007_admin_delete_policies.sql` — admin hard delete RLS politikaları
 3. Authentication → Providers'tan **Email** (doğrulama açık) ve **Google** sağlayıcılarını etkinleştir.
-4. Storage'da **private** bucket'lar oluştur:
+4. Storage bucket'ları `0006` migration ile otomatik oluşur. Eski kurulumlarda manuel oluşturmak istersen **private** bucket'lar:
    - `request-files` — analiz/tez talep dosyaları
    - `class-materials` — sınıf materyalleri
 5. Proje URL ve publishable key'i `.env.local`'a yaz.
+6. Kullanıcı silme için Supabase Dashboard → Settings → API → **service_role** secret'ı `SUPABASE_SECRET_KEY` olarak ekle.
 
 ### Seed verileri (isteğe bağlı)
 
