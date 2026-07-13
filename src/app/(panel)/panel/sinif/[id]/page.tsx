@@ -1,12 +1,13 @@
-// src/app/(panel)/panel/sinif/[id]/page.tsx — kayıtlı kullanıcının eğitim içerik sayfası:
-// genel bilgiler + kategori tab'larıyla materyaller (yalnız onaylı kayıtlılar erişir)
+// src/app/(panel)/panel/sinif/[id]/page.tsx — kayıtlı kullanıcı sınıf detayı: wow progress + 4 tab
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, CalendarDays, Clock, Layers } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { getModuleSyllabus } from "@/lib/queries/catalog";
+import { ClassDetailTabs } from "@/components/panel/class-detail-tabs";
 import type { ClassMaterial } from "@/lib/types/catalog";
-import { ClassMaterialsTabs, type MaterialWithUrl } from "@/components/panel/class-materials-tabs";
+import type { MaterialWithUrl } from "@/components/panel/class-materials-tabs";
 
 export const metadata: Metadata = { title: "Eğitim İçeriği" };
 export const dynamic = "force-dynamic";
@@ -17,7 +18,6 @@ export default async function MemberClassContentPage({ params }: { params: Promi
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/giris");
 
-  // Erişim: yalnız onaylı kayıt (pending/cancelled hariç)
   const { data: enrollment } = await supabase
     .from("class_enrollments")
     .select("status")
@@ -41,9 +41,10 @@ export default async function MemberClassContentPage({ params }: { params: Promi
   if (!trainingClass) notFound();
   const materials = (materialsResult.data ?? []) as ClassMaterial[];
 
-  // Dosyalı materyaller için 1 saatlik imzalı indirme linkleri
+  const syllabus = await getModuleSyllabus(trainingClass.module_id);
+
   const signedUrlMap = new Map<string, string>();
-  const filePaths = materials.filter((material) => material.file_path).map((material) => material.file_path!);
+  const filePaths = materials.filter((m) => m.file_path).map((m) => m.file_path!);
   if (filePaths.length > 0) {
     const { data: signed } = await supabase.storage.from("class-materials").createSignedUrls(filePaths, 3600);
     signed?.forEach((entry) => {
@@ -62,6 +63,7 @@ export default async function MemberClassContentPage({ params }: { params: Promi
         <ArrowLeft className="size-4" aria-hidden /> Eğitimlerim
       </Link>
       <h1 className="mt-3 font-display text-2xl font-bold tracking-tight">{trainingClass.title}</h1>
+      <p className="mt-1 text-sm text-ink-soft">{trainingClass.education_modules?.title}</p>
       <div className="mt-2 flex flex-wrap gap-4 text-sm text-ink-soft">
         <span className="inline-flex items-center gap-1.5">
           <CalendarDays className="size-4" aria-hidden />
@@ -79,9 +81,9 @@ export default async function MemberClassContentPage({ params }: { params: Promi
       </div>
 
       {trainingClass.overview && (
-        <div className="mt-6 rounded-xl border border-line bg-accent-soft/50 p-6">
-          <h2 className="font-display text-lg font-semibold">Eğitim Hakkında</h2>
-          <div className="mt-2 space-y-3 text-sm leading-relaxed text-ink-soft">
+        <div className="mt-6 rounded-xl border border-line bg-white p-5 shadow-sm">
+          <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-ink-soft">Eğitim Hakkında</h2>
+          <div className="mt-2 space-y-2 text-sm leading-relaxed text-ink-soft">
             {trainingClass.overview.split("\n").filter(Boolean).map((paragraph: string, index: number) => (
               <p key={index}>{paragraph}</p>
             ))}
@@ -90,7 +92,13 @@ export default async function MemberClassContentPage({ params }: { params: Promi
       )}
 
       <div className="mt-8">
-        <ClassMaterialsTabs materials={materialsWithUrls} />
+        <ClassDetailTabs
+          startDate={trainingClass.start_date}
+          durationWeeks={trainingClass.duration_weeks}
+          currentWeekOverride={trainingClass.current_week_override}
+          syllabus={syllabus}
+          materials={materialsWithUrls}
+        />
       </div>
     </>
   );

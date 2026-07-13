@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { getModuleById, getModuleBundles, getModulePlans } from "@/lib/queries/catalog";
+import { getModuleById, getModuleBundles, getModulePlans, getModuleSyllabus } from "@/lib/queries/catalog";
 import { ModuleDetailTabs } from "@/components/admin/module-detail-tabs";
 import { categoryLabels } from "@/lib/types/catalog";
 import { StatusBanner } from "@/components/admin/fields";
@@ -16,15 +16,22 @@ export default async function ModuleDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ saved?: string; error?: string }>;
+  searchParams: Promise<{ saved?: string; error?: string; tab?: string; hint?: string }>;
 }) {
   const { id } = await params;
-  const { saved, error } = await searchParams;
+  const { saved, error, tab, hint } = await searchParams;
 
   const educationModule = await getModuleById(id);
   if (!educationModule) notFound();
 
-  const [plans, bundles] = await Promise.all([getModulePlans(id), getModuleBundles(id)]);
+  const [plans, bundles, syllabus] = await Promise.all([
+    getModulePlans(id),
+    getModuleBundles(id),
+    getModuleSyllabus(id),
+  ]);
+
+  const initialTab =
+    tab === "syllabus" || tab === "plans" || tab === "bundles" ? tab : "general";
 
   return (
     <>
@@ -36,10 +43,21 @@ export default async function ModuleDetailPage({
 
       <div className="mt-6">
         <StatusBanner saved={saved} error={error} />
+        {hint === "add_syllabus" && (
+          <p role="status" className="mb-6 rounded-lg bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">
+            Modül oluşturuldu. Public vitrin için Müfredat sekmesinden haftalık konuları ekleyin.
+          </p>
+        )}
       </div>
 
       <div className="mt-6">
-        <ModuleDetailTabs module={educationModule} plans={plans} bundles={bundles} />
+        <ModuleDetailTabs
+          module={educationModule}
+          plans={plans}
+          bundles={bundles}
+          syllabus={syllabus}
+          initialTab={initialTab}
+        />
       </div>
     </>
   );

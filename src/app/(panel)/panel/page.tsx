@@ -2,7 +2,7 @@
 // her kartta 4 adımlı ilerleme stepper'ı ve admin ilerleme notu
 import type { Metadata } from "next";
 import Link from "next/link";
-import { GraduationCap, CalendarDays } from "lucide-react";
+import { ArrowRight, GraduationCap, CalendarDays } from "lucide-react";
 import { getMyEnrollments, getMyIndividualRequests } from "@/lib/queries/member";
 import { requestTypeLabels } from "@/lib/types/catalog";
 import type { EnrollmentStatus, RequestStatus } from "@/lib/types/catalog";
@@ -106,6 +106,13 @@ export default async function MyTrainingsPage({
                     {request.progress_note}
                   </p>
                 )}
+                <Link
+                  href={`/panel/talep/${request.id}`}
+                  className="mt-4 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-accent hover:underline"
+                >
+                  Detaya Git
+                  <ArrowRight className="size-4" aria-hidden />
+                </Link>
               </div>
             ))}
           </div>

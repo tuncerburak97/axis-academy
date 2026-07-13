@@ -68,9 +68,10 @@ const classDetailsSchema = z.object({
   class_id: z.string().uuid(),
   overview: z.string().max(5000),
   duration_weeks: z.coerce.number().int().min(0).max(104),
+  current_week_override: z.union([z.literal(""), z.coerce.number().int().min(1).max(104)]).optional(),
 });
 
-// Eğitim genel içeriği ve hafta sayısı (materyal yönetimi sayfasından)
+// Eğitim genel içeriği, hafta sayısı ve güncel hafta override
 export async function updateClassDetails(formData: FormData): Promise<void> {
   const { supabase } = await requireAdmin();
 
@@ -78,14 +79,22 @@ export async function updateClassDetails(formData: FormData): Promise<void> {
     class_id: formData.get("class_id"),
     overview: formData.get("overview") ?? "",
     duration_weeks: formData.get("duration_weeks") ?? 0,
+    current_week_override: formData.get("current_week_override") ?? "",
   });
   if (!parsed.success) redirect("/admin/siniflar?error=validation");
 
-  const { class_id, ...update } = parsed.data;
-  const { error } = await supabase.from("classes").update(update).eq("id", class_id);
+  const { class_id, current_week_override, ...update } = parsed.data;
+  const overrideValue =
+    current_week_override === "" || current_week_override === undefined ? null : current_week_override;
+
+  const { error } = await supabase
+    .from("classes")
+    .update({ ...update, current_week_override: overrideValue })
+    .eq("id", class_id);
   if (error) redirect(`/admin/siniflar/${class_id}?error=db`);
 
   revalidatePath(`/admin/siniflar/${class_id}`);
+  revalidatePath(`/panel/sinif/${class_id}`);
   redirect(`/admin/siniflar/${class_id}?saved=1`);
 }
 

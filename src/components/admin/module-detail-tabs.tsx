@@ -1,33 +1,38 @@
-// src/components/admin/module-detail-tabs.tsx — modül detay 3 sekmeli görünüm
+// src/components/admin/module-detail-tabs.tsx — modül detay 4 sekmeli görünüm (müfredat dahil)
 "use client";
 
 import { useState } from "react";
 import { updateModule } from "@/lib/actions/admin-catalog";
 import { ModuleBundlesPanel } from "@/components/admin/module-bundles-panel";
 import { ModulePlansPanel } from "@/components/admin/module-plans-panel";
+import { ModuleSyllabusPanel } from "@/components/admin/module-syllabus-panel";
 import { ModuleInfoFields } from "@/components/admin/module-catalog-fields";
 import { SubmitButton } from "@/components/admin/fields";
-import type { BundlePackage, EducationModule, PricingPlan } from "@/lib/types/catalog";
+import type { BundlePackage, EducationModule, PricingPlan, SyllabusWeek } from "@/lib/types/catalog";
 
-type ModuleTab = "general" | "plans" | "bundles";
+type ModuleTab = "general" | "syllabus" | "plans" | "bundles";
 
 interface ModuleDetailTabsProps {
   module: EducationModule;
   plans: PricingPlan[];
   bundles: BundlePackage[];
+  syllabus: SyllabusWeek[];
+  initialTab?: ModuleTab;
 }
 
 const tabLabels: Record<ModuleTab, string> = {
   general: "Genel Görünüm",
+  syllabus: "Müfredat",
   plans: "Fiyat Planları",
   bundles: "Örnek Paketler",
 };
 
-export function ModuleDetailTabs({ module, plans, bundles }: ModuleDetailTabsProps) {
-  const [activeTab, setActiveTab] = useState<ModuleTab>("general");
+export function ModuleDetailTabs({ module, plans, bundles, syllabus, initialTab = "general" }: ModuleDetailTabsProps) {
+  const [activeTab, setActiveTab] = useState<ModuleTab>(initialTab);
 
   const tabs: { id: ModuleTab; count?: number }[] = [
     { id: "general" },
+    { id: "syllabus", count: syllabus.length },
     { id: "plans", count: plans.length },
     { id: "bundles", count: bundles.length },
   ];
@@ -73,6 +78,7 @@ export function ModuleDetailTabs({ module, plans, bundles }: ModuleDetailTabsPro
           </section>
         )}
 
+        {activeTab === "syllabus" && <ModuleSyllabusPanel moduleId={module.id} weeks={syllabus} />}
         {activeTab === "plans" && <ModulePlansPanel moduleId={module.id} plans={plans} />}
         {activeTab === "bundles" && <ModuleBundlesPanel moduleId={module.id} bundles={bundles} />}
       </div>

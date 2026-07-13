@@ -100,6 +100,7 @@ export function StatusBanner({ saved, error }: { saved?: string; error?: string 
     last_admin: "Son admin hesabı silinemez.",
     no_service_key: "SUPABASE_SECRET_KEY tanımlı değil — kullanıcı silme devre dışı.",
     not_found: "Kayıt bulunamadı.",
+    syllabus_required: "Modülü aktif yapmak için en az bir haftalık müfredat ekleyin.",
   };
   return (
     <p role="alert" className="mb-6 rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-700">

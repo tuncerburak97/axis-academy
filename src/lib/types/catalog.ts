@@ -80,6 +80,15 @@ export interface ClassMaterial {
   created_at: string;
 }
 
+export interface SyllabusWeek {
+  id: string;
+  module_id: string;
+  week_number: number;
+  title: string;
+  description: string;
+  sort_order: number;
+}
+
 export interface TrainingClass {
   id: string;
   module_id: string;

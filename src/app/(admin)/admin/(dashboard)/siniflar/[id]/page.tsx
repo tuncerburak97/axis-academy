@@ -14,6 +14,7 @@ import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { materialCategoryLabels } from "@/lib/types/catalog";
 import type { ClassMaterial, MaterialCategory } from "@/lib/types/catalog";
 import { isPdfPath } from "@/lib/materials";
+import { buildClassProgress, computeAutoWeek } from "@/lib/syllabus";
 import {
   NumberInput,
   SelectField,
@@ -57,6 +58,13 @@ export default async function ClassContentManagementPage({
   if (!trainingClass) notFound();
   const materials = (materialsResult.data ?? []) as ClassMaterial[];
 
+  const autoWeek = computeAutoWeek(trainingClass.start_date);
+  const progress = buildClassProgress(
+    trainingClass.start_date,
+    trainingClass.duration_weeks,
+    trainingClass.current_week_override,
+  );
+
   const signedUrlMap = new Map<string, string>();
   const filePaths = materials.filter((m) => m.file_path).map((m) => m.file_path!);
   if (filePaths.length > 0) {
@@ -84,9 +92,20 @@ export default async function ClassContentManagementPage({
         <h2 id="class-info-heading" className="font-display text-lg font-semibold">Eğitim Bilgileri</h2>
         <form action={updateClassDetails} className="mt-4 space-y-4">
           <input type="hidden" name="class_id" value={trainingClass.id} />
-          <div className="max-w-40">
+          <div className="grid gap-4 sm:grid-cols-2">
             <NumberInput label="Süre (hafta)" name="duration_weeks" defaultValue={trainingClass.duration_weeks} min={0} />
+            <NumberInput
+              label="Güncel hafta override (boş = otomatik)"
+              name="current_week_override"
+              defaultValue={trainingClass.current_week_override ?? undefined}
+              min={1}
+            />
           </div>
+          <p className="rounded-lg bg-surface px-3 py-2 text-xs text-ink-soft">
+            Otomatik hesaplanan hafta: <strong>{autoWeek}</strong> · Öğrenci panelinde görünen:{" "}
+            <strong>Hafta {progress.effectiveWeek}</strong>
+            {progress.isManualOverride && " (manuel override aktif)"}
+          </p>
           <TextArea
             label="Genel içerik / tanıtım (kayıtlı kullanıcı görür; Markdown desteklenir)"
             name="overview"

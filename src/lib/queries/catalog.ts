@@ -1,6 +1,6 @@
 // src/lib/queries/catalog.ts — eğitim kataloğu okuma sorguları (Server Component'lerden çağrılır)
 import { createClient } from "@/lib/supabase/server";
-import type { BundlePackage, EducationModule, PricingPlan } from "@/lib/types/catalog";
+import type { BundlePackage, EducationModule, PricingPlan, SyllabusWeek } from "@/lib/types/catalog";
 
 export async function getActiveModules(): Promise<EducationModule[]> {
   const supabase = await createClient();
@@ -72,5 +72,15 @@ export async function getModuleBundles(moduleId: string): Promise<BundlePackage[
     .select("*")
     .eq("module_id", moduleId)
     .order("fixed_price");
+  return data ?? [];
+}
+
+export async function getModuleSyllabus(moduleId: string): Promise<SyllabusWeek[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("module_syllabus_weeks")
+    .select("*")
+    .eq("module_id", moduleId)
+    .order("week_number");
   return data ?? [];
 }

@@ -16,7 +16,8 @@ import {
   Timer,
   UserPlus,
 } from "lucide-react";
-import { getActiveBundles, getModuleById, getPublicUpcomingClasses } from "@/lib/queries/catalog";
+import { getActiveBundles, getModuleById, getModuleSyllabus, getPublicUpcomingClasses } from "@/lib/queries/catalog";
+import { SyllabusTimeline } from "@/components/public/syllabus-timeline";
 import { categoryLabels } from "@/lib/types/catalog";
 import { categoryImages } from "@/lib/images";
 import { PackagesDialog } from "@/components/public/packages-dialog";
@@ -33,9 +34,10 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
   const educationModule = await getModuleById(id);
   if (!educationModule || !educationModule.is_active) notFound();
 
-  const [bundles, upcomingClasses] = await Promise.all([
+  const [bundles, upcomingClasses, syllabus] = await Promise.all([
     getActiveBundles(id),
     getPublicUpcomingClasses(id),
+    getModuleSyllabus(id),
   ]);
 
   return (
@@ -98,13 +100,17 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
             <div className="flex items-center gap-3">
               <span className="rounded-lg bg-accent-soft p-2.5 text-accent"><ListChecks className="size-5" aria-hidden /></span>
               <div>
-                <dt className="text-xs font-medium text-ink-soft">Kazanım</dt>
-                <dd className="font-display text-xl font-bold">{educationModule.features.length} net çıktı</dd>
+                <dt className="text-xs font-medium text-ink-soft">Program</dt>
+                <dd className="font-display text-xl font-bold">
+                  {syllabus.length > 0 ? `${syllabus.length} haftalık müfredat` : `${educationModule.features.length} net çıktı`}
+                </dd>
               </div>
             </div>
           </dl>
         </Reveal>
       </section>
+
+      <SyllabusTimeline weeks={syllabus} />
 
       <section className="mx-auto grid max-w-6xl gap-12 px-3 py-16 sm:px-6 md:grid-cols-[2fr_1fr]">
         <div>

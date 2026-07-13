@@ -57,7 +57,7 @@ export async function createModule(formData: FormData): Promise<void> {
   if (error) redirect("/admin/moduller?error=db");
 
   revalidateCatalog(data.id);
-  redirect(`/admin/moduller/${data.id}`);
+  redirect(`/admin/moduller/${data.id}?hint=add_syllabus&tab=syllabus`);
 }
 
 export async function updateModule(formData: FormData): Promise<void> {
@@ -81,6 +81,14 @@ export async function updateModule(formData: FormData): Promise<void> {
     .update({ ...parsed.data, features: parseFeatures(formData.get("features")) })
     .eq("id", moduleId);
   if (error) redirect(`/admin/moduller/${moduleId}?error=db`);
+
+  if (parsed.data.is_active) {
+    const { count } = await supabase
+      .from("module_syllabus_weeks")
+      .select("*", { count: "exact", head: true })
+      .eq("module_id", moduleId);
+    if ((count ?? 0) < 1) redirect(`/admin/moduller/${moduleId}?error=syllabus_required&tab=syllabus`);
+  }
 
   revalidateCatalog(moduleId);
   redirect(`/admin/moduller/${moduleId}?saved=1`);
@@ -202,4 +210,70 @@ export async function deleteBundle(formData: FormData): Promise<void> {
 
   revalidateCatalog(moduleId);
   redirect(`/admin/moduller/${moduleId}?saved=1`);
+}
+
+const syllabusSchema = z.object({
+  module_id: z.string().uuid(),
+  week_number: z.coerce.number().int().min(1).max(104),
+  title: z.string().min(2).max(200),
+  description: z.string().max(1000),
+  sort_order: z.coerce.number().int().min(0),
+});
+
+function syllabusInputFromForm(formData: FormData) {
+  return {
+    module_id: formData.get("module_id"),
+    week_number: formData.get("week_number"),
+    title: formData.get("title"),
+    description: formData.get("description") ?? "",
+    sort_order: formData.get("sort_order") ?? 0,
+  };
+}
+
+function syllabusAdminPath(moduleId: string, error?: string, saved?: boolean) {
+  const params = new URLSearchParams();
+  if (error) params.set("error", error);
+  if (saved) params.set("saved", "1");
+  params.set("tab", "syllabus");
+  const query = params.toString();
+  return `/admin/moduller/${moduleId}?${query}`;
+}
+
+export async function createSyllabusWeek(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const parsed = syllabusSchema.safeParse(syllabusInputFromForm(formData));
+  const moduleId = String(formData.get("module_id"));
+  if (!parsed.success) redirect(syllabusAdminPath(moduleId, "validation"));
+
+  const { error } = await supabase.from("module_syllabus_weeks").insert(parsed.data);
+  if (error) redirect(syllabusAdminPath(moduleId, "db"));
+
+  revalidateCatalog(moduleId);
+  redirect(syllabusAdminPath(moduleId, undefined, true));
+}
+
+export async function updateSyllabusWeek(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const weekId = String(formData.get("week_id"));
+  const parsed = syllabusSchema.safeParse(syllabusInputFromForm(formData));
+  const moduleId = String(formData.get("module_id"));
+  if (!parsed.success) redirect(syllabusAdminPath(moduleId, "validation"));
+
+  const { error } = await supabase.from("module_syllabus_weeks").update(parsed.data).eq("id", weekId);
+  if (error) redirect(syllabusAdminPath(moduleId, "db"));
+
+  revalidateCatalog(moduleId);
+  redirect(syllabusAdminPath(moduleId, undefined, true));
+}
+
+export async function deleteSyllabusWeek(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const weekId = String(formData.get("week_id"));
+  const moduleId = String(formData.get("module_id"));
+
+  const { error } = await supabase.from("module_syllabus_weeks").delete().eq("id", weekId);
+  if (error) redirect(syllabusAdminPath(moduleId, "db"));
+
+  revalidateCatalog(moduleId);
+  redirect(syllabusAdminPath(moduleId, undefined, true));
 }
