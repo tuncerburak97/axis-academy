@@ -122,3 +122,16 @@ location / {
     proxy_set_header X-Forwarded-Proto $scheme;
 }
 ```
+# .env.production — Docker production ortamı (git'e girmez)
+APP_URL=https://axisakademi.com
+NODE_ENV=production
+
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://ysroydlnzrfscrqaltds.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_x24i912fWWkgzgxK-Sg_VA_qiQFLlto
+
+# Opsiyonel — boş (bildirimler atlanır)
+SUPABASE_SECRET_KEY=
+RESEND_API_KEY=
+ADMIN_EMAIL=
+EMAIL_FROM=
