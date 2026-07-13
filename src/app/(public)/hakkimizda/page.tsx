@@ -77,13 +77,13 @@ export default function AboutPage() {
     <>
       {/* Anlatı hero'su */}
       <section className="border-b border-line bg-surface">
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2 md:py-20">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-3 py-16 sm:px-6 md:grid-cols-2 md:py-20">
           <div>
             <FadeUp>
               <p className="inline-flex rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold tracking-wide text-accent">
                 Kurumsal
               </p>
-              <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+              <h1 className="mt-4 font-display text-2xl font-bold tracking-tight sm:text-3xl md:text-5xl">
                 Akademiden gelen disiplin, sahada kanıtlanmış deneyim
               </h1>
             </FadeUp>
@@ -122,7 +122,7 @@ export default function AboutPage() {
       </section>
 
       {/* Sayaçlı istatistik bandı */}
-      <section aria-label="Rakamlarla Axis Akademi" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <section aria-label="Rakamlarla Axis Akademi" className="mx-auto max-w-6xl px-3 py-16 sm:px-6">
         <Reveal>
           <div className="grid gap-10 rounded-2xl border border-line bg-white px-4 py-8 shadow-sm sm:px-8 sm:py-10 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => (
@@ -134,7 +134,7 @@ export default function AboutPage() {
 
       {/* Kadro */}
       <section aria-labelledby="team-heading" className="bg-surface py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto max-w-6xl px-3 sm:px-6">
           <Reveal>
             <h2 id="team-heading" className="font-display text-3xl font-bold tracking-tight">Kadromuz</h2>
             <p className="mt-2 max-w-xl text-ink-soft">
@@ -158,7 +158,7 @@ export default function AboutPage() {
       </section>
 
       {/* Değerler */}
-      <section aria-labelledby="values-heading" className="mx-auto max-w-6xl px-4 py-16 sm:px-6 md:py-20">
+      <section aria-labelledby="values-heading" className="mx-auto max-w-6xl px-3 py-16 sm:px-6 md:py-20">
         <Reveal>
           <h2 id="values-heading" className="font-display text-3xl font-bold tracking-tight">
             Neden Axis Akademi?

@@ -37,7 +37,7 @@ export function MobileSiteMenu() {
             Axis<span className="text-accent"> Akademi</span>
           </SheetTitle>
         </SheetHeader>
-        <nav aria-label="Ana menü" className="flex flex-col p-4">
+        <nav aria-label="Ana menü" className="flex flex-col p-3">
           {publicNavLinks.map((link) => {
             const isActive = pathname === link.href;
             return (
@@ -56,7 +56,7 @@ export function MobileSiteMenu() {
           })}
         </nav>
         <Separator />
-        <div className="flex flex-col gap-2 p-4">
+        <div className="flex flex-col gap-2 p-3">
           <Link
             href="/giris"
             onClick={() => setMenuOpen(false)}

@@ -1,4 +1,4 @@
-// src/components/public/site-header.tsx — public site üst navigasyonu (sticky, mobil drawer)
+// src/components/public/site-header.tsx — public site üst navigasyonu (375px optimize)
 import Link from "next/link";
 import { publicNavLinks } from "@/lib/navigation";
 import { MobileSiteMenu } from "@/components/public/mobile-site-menu";
@@ -6,8 +6,8 @@ import { MobileSiteMenu } from "@/components/public/mobile-site-menu";
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-white/85 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <Link href="/" className="shrink-0 font-display text-lg font-bold tracking-tight">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:h-16 sm:gap-3 sm:px-6">
+        <Link href="/" className="shrink-0 font-display text-base font-bold tracking-tight sm:text-lg">
           Axis<span className="text-accent"> Akademi</span>
         </Link>
 
@@ -23,7 +23,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
           <Link
             href="/giris"
             className="hidden min-h-11 items-center rounded-lg px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface sm:inline-flex sm:px-4"

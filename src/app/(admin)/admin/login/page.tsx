@@ -24,11 +24,11 @@ export default async function AdminLoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8 sm:px-6 sm:py-20">
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-3 py-8 sm:px-6 sm:py-20">
       <p className="font-display text-lg font-bold tracking-tight">
         Axis<span className="text-accent"> Akademi</span>
       </p>
-      <h1 className="mt-2 font-display text-3xl font-bold tracking-tight">Yönetici Girişi</h1>
+      <h1 className="mt-2 font-display text-2xl font-bold tracking-tight sm:text-3xl">Yönetici Girişi</h1>
       <AdminLoginForm />
     </main>
   );

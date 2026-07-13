@@ -32,8 +32,8 @@ export function AdminShell({ activeRequestCount, logoutButton, children }: Admin
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       {/* Mobil üst bar */}
-      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-white px-4 md:hidden">
-        <Link href="/admin" className="font-display text-lg font-bold tracking-tight">
+      <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-line bg-white px-3 md:hidden">
+        <Link href="/admin" className="font-display text-base font-bold tracking-tight">
           Axis<span className="text-accent"> Admin</span>
         </Link>
         <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -48,7 +48,7 @@ export function AdminShell({ activeRequestCount, logoutButton, children }: Admin
                 Axis<span className="text-accent"> Admin</span>
               </SheetTitle>
             </SheetHeader>
-            <div className="flex flex-1 flex-col p-4">
+            <div className="flex flex-1 flex-col p-3">
               <AdminNav
                 activeRequestCount={activeRequestCount}
                 onNavigate={() => setMenuOpen(false)}
@@ -70,7 +70,7 @@ export function AdminShell({ activeRequestCount, logoutButton, children }: Admin
         {logoutButton}
       </aside>
 
-      <main className="flex-1 bg-surface px-4 py-6 sm:px-6 md:px-10 md:py-8">{children}</main>
+      <main className="flex-1 bg-surface px-3 py-6 sm:px-6 md:px-10 md:py-8">{children}</main>
     </div>
   );
 }

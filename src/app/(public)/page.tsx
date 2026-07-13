@@ -63,7 +63,7 @@ export default async function HomePage() {
       {/* Hero: solda metin, sağda yüzen rozetli görsel kompozisyonu */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--color-accent-soft),transparent_55%)]" aria-hidden />
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2 md:py-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-12 px-3 py-16 sm:px-6 md:grid-cols-2 md:py-24">
           <div>
             <FadeUp>
               <p className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold tracking-wide text-accent">
@@ -71,7 +71,7 @@ export default async function HomePage() {
               </p>
             </FadeUp>
             <FadeUp delay={0.1}>
-              <h1 className="mt-5 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl xl:text-6xl">
+              <h1 className="mt-5 font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
                 {hero.title}
               </h1>
             </FadeUp>
@@ -82,13 +82,13 @@ export default async function HomePage() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/kayit"
-                  className="inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3 font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-md active:scale-[0.98]"
+                  className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-md active:scale-[0.98] sm:px-6 sm:text-base"
                 >
                   Hemen Kayıt Ol <ArrowRight className="size-4" aria-hidden />
                 </Link>
                 <Link
                   href="/egitim"
-                  className="inline-flex items-center rounded-xl border border-line bg-white px-6 py-3 font-semibold text-ink transition-all hover:bg-surface active:scale-[0.98]"
+                  className="inline-flex items-center rounded-xl border border-line bg-white px-4 py-3 text-sm font-semibold text-ink transition-all hover:bg-surface active:scale-[0.98] sm:px-6 sm:text-base"
                 >
                   Eğitimleri İncele
                 </Link>
@@ -133,7 +133,7 @@ export default async function HomePage() {
 
       {/* Hizmet kartları: görselli, hover'da yükselen */}
       <section aria-labelledby="services-heading" className="bg-surface py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto max-w-6xl px-3 sm:px-6">
           <Reveal>
             <h2 id="services-heading" className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
               Üç hizmet, tek çatı
@@ -181,7 +181,7 @@ export default async function HomePage() {
 
       {/* Nasıl çalışır */}
       <section aria-labelledby="how-heading" className="py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="mx-auto max-w-6xl px-3 sm:px-6">
           <Reveal>
             <h2 id="how-heading" className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
               Nasıl çalışır?

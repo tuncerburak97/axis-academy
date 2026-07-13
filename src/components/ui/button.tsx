@@ -14,7 +14,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-surface",
       },
       size: {
-        default: "px-4 py-2",
+        default: "px-3 py-2 sm:px-4",
         icon: "size-11 shrink-0 p-0",
         sm: "min-h-9 min-w-9 px-3 py-1.5 text-xs",
       },

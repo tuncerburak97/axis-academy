@@ -13,8 +13,8 @@ export default async function LoginPage() {
   if (user) redirect("/panel");
 
   return (
-    <section className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6 sm:py-20">
-      <h1 className="font-display text-3xl font-bold tracking-tight">Giriş Yap</h1>
+    <section className="mx-auto flex max-w-md flex-col px-3 py-12 sm:px-6 sm:py-20">
+      <h1 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">Giriş Yap</h1>
       <p className="mt-2 text-sm text-ink-soft">
         Hesabın yok mu?{" "}
         <Link href="/kayit" className="font-semibold text-accent hover:underline">Kayıt ol</Link>

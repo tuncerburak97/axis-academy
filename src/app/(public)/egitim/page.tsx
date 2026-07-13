@@ -29,7 +29,7 @@ export default async function EducationPage() {
   return (
     <>
       <PageIntro eyebrow="Hizmet" title={intro.title} description={intro.description} />
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <section className="mx-auto max-w-6xl px-3 py-16 sm:px-6">
         {modules.length === 0 ? (
           <p className="rounded-xl border border-dashed border-line bg-surface p-8 text-center text-ink-soft">
             Eğitim programları çok yakında burada. Bizi takipte kalın.

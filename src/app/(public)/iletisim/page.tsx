@@ -33,7 +33,7 @@ export default function ContactPage() {
         title="Bize Ulaşın"
         description="Üye olmadan da soru sorabilirsiniz; mesajınız doğrudan ekibimize düşer."
       />
-      <section className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-[1fr_1.2fr]">
+      <section className="mx-auto grid max-w-6xl gap-12 px-3 py-16 sm:px-6 md:grid-cols-[1fr_1.2fr]">
         <Reveal>
           <ul className="space-y-6">
             {infoItems.map((item) => (

@@ -36,7 +36,9 @@ export default async function MyRequestsPage({
           href="/panel/talepler/yeni"
           className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong sm:w-auto"
         >
-          <Plus className="size-4" aria-hidden /> Yeni Analiz/Tez Talebi
+          <Plus className="size-4 shrink-0" aria-hidden />
+          <span className="sm:hidden">Yeni Talep</span>
+          <span className="hidden sm:inline">Yeni Analiz/Tez Talebi</span>
         </Link>
       </div>
 

@@ -21,12 +21,12 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-line bg-white">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="font-display text-lg font-bold tracking-tight">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6">
+          <Link href="/" className="shrink-0 font-display text-base font-bold tracking-tight sm:text-lg">
             Axis<span className="text-accent"> Akademi</span>
           </Link>
-          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-            <span className="max-w-[8rem] truncate text-xs text-ink-soft sm:max-w-none sm:text-sm">
+          <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
+            <span className="max-w-[5.5rem] truncate text-xs text-ink-soft sm:max-w-none sm:text-sm">
               {displayName}
             </span>
             <form action={logout}>
@@ -41,7 +41,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         </div>
         <PanelTabs />
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-8 sm:px-6 sm:py-10">{children}</main>
     </div>
   );
 }

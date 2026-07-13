@@ -50,7 +50,7 @@ export function ClassMaterialsTabs({ materials }: ClassMaterialsTabsProps) {
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveTab(category)}
-              className={`min-h-11 shrink-0 snap-start whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+              className={`min-h-11 shrink-0 snap-start whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors sm:px-4 sm:py-3 ${
                 isActive ? "border-accent text-accent" : "border-transparent text-ink-soft hover:text-ink"
               }`}
             >

@@ -24,7 +24,7 @@ export default async function ThesisEditingPage() {
   return (
     <>
       <PageIntro eyebrow="Hizmet" title={intro.title} description={intro.description} />
-      <section className="mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 sm:px-6 md:grid-cols-2">
+      <section className="mx-auto grid max-w-6xl items-center gap-12 px-3 py-16 sm:px-6 md:grid-cols-2">
         <Reveal>
           <p className="max-w-2xl whitespace-pre-wrap text-ink-soft">{intro.body}</p>
           <ul className="mt-8 space-y-4">

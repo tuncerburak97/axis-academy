@@ -41,7 +41,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
   return (
     <>
       <section className="border-b border-line bg-surface">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-16 sm:px-6 md:grid-cols-[3fr_2fr]">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-3 py-16 sm:px-6 md:grid-cols-[3fr_2fr]">
           <div>
             <Link href="/egitim" className="inline-flex items-center gap-1 text-sm font-semibold text-ink-soft hover:text-ink">
               <ArrowLeft className="size-4" aria-hidden /> Tüm Eğitimler
@@ -57,7 +57,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
                   </span>
                 )}
               </div>
-              <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">{educationModule.title}</h1>
+              <h1 className="mt-4 font-display text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl">{educationModule.title}</h1>
               <p className="mt-3 max-w-2xl text-lg text-ink-soft">{educationModule.description}</p>
             </FadeUp>
           </div>
@@ -106,7 +106,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
         </Reveal>
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-12 px-4 py-16 sm:px-6 md:grid-cols-[2fr_1fr]">
+      <section className="mx-auto grid max-w-6xl gap-12 px-3 py-16 sm:px-6 md:grid-cols-[2fr_1fr]">
         <div>
           {educationModule.long_description ? (
             <div className="space-y-4 leading-relaxed text-ink-soft">
@@ -168,7 +168,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
       {/* Yaklaşan eğitimler: tarih bazlı, kayıt CTA'lı */}
       {upcomingClasses.length > 0 && (
         <section aria-labelledby="upcoming-heading" className="bg-surface py-16">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
+          <div className="mx-auto max-w-6xl px-3 sm:px-6">
             <Reveal>
               <h2 id="upcoming-heading" className="font-display text-3xl font-bold tracking-tight">
                 Yaklaşan Eğitimler
@@ -212,7 +212,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
       )}
 
       {/* Katılım akışı: 3 adım */}
-      <section aria-labelledby="flow-heading" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
+      <section aria-labelledby="flow-heading" className="mx-auto max-w-6xl px-3 py-16 sm:px-6">
         <Reveal>
           <div className="rounded-2xl bg-ink px-8 py-12 text-white md:px-12">
             <h2 id="flow-heading" className="text-center font-display text-2xl font-bold tracking-tight md:text-3xl">

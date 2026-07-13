@@ -5,7 +5,7 @@
 
 ## Amaç
 
-Tüm ekranların (public, panel, admin) 390px+ mobil cihazlarda tam kullanılabilir olması. Admin sidebar ve public ana menünün mobilde erişilebilir hale getirilmesi.
+Tüm ekranların (public, panel, admin) 375px+ mobil cihazlarda tam kullanılabilir olması. Admin sidebar ve public ana menünün mobilde erişilebilir hale getirilmesi.
 
 ## Kararlar
 
@@ -14,7 +14,7 @@ Tüm ekranların (public, panel, admin) 390px+ mobil cihazlarda tam kullanılabi
 | Mobil nav deseni | Sol drawer (hamburger) |
 | Altyapı | shadcn/ui Sheet (Radix) |
 | Kapsam | Tam audit (public + panel + admin) |
-| Min viewport | 390px |
+| Min viewport | 375px |
 | Panel sekmeleri | Yatay scroll korunur + scroll ipucu |
 
 ## Mimari
@@ -52,6 +52,14 @@ Tüm ekranların (public, panel, admin) 390px+ mobil cihazlarda tam kullanılabi
 - Admin `siniflar`: mobil form düzeni
 - Auth sayfaları: `py-12 sm:py-20`, buton yükseklikleri
 
+### Faz 3 (2026-07-14) — 375px sıkılaştırma
+- Min viewport: 390px → **375px**
+- Mobil gutter: `px-4` → `px-3` (12px), `sm:px-6` korunur
+- Hero/auth h1: `text-2xl sm:text-3xl` mobil taban
+- Panel sekmeleri: `px-3`, header logo `text-base sm:text-lg`
+- CTA butonları: `px-4 sm:px-6` mobil
+- Panel kullanıcı adı: `max-w-[5.5rem]` truncate
+
 ## Erişilebilirlik
 
 - Sheet: Radix odak tuzağı, ESC, `aria-expanded`
@@ -61,7 +69,7 @@ Tüm ekranların (public, panel, admin) 390px+ mobil cihazlarda tam kullanılabi
 
 ## Test planı
 
-1. 390px genişlikte admin login → tüm menü öğelerine erişim
+1. 375px genişlikte admin login → tüm menü öğelerine erişim
 2. Public header hamburger → 6 sayfa linki
 3. Panel sekmeleri kaydırılabilir ve aktif sekme görünür
 4. Kullanıcılar sayfası mobilde kart, desktop tablo

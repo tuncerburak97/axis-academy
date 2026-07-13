@@ -12,7 +12,7 @@ export default async function FaqPage() {
   return (
     <>
       <PageIntro eyebrow="Destek" title="Sıkça Sorulan Sorular" description="Merak edilenlerin net yanıtları." />
-      <section className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+      <section className="mx-auto max-w-3xl px-3 py-16 sm:px-6">
         <dl className="space-y-4">
           {faq.items.map((item) => (
             <div key={item.question} className="rounded-xl border border-line bg-white p-6 shadow-sm">

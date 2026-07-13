@@ -4,7 +4,7 @@ import Link from "next/link";
 export function SiteFooter() {
   return (
     <footer className="border-t border-line bg-surface">
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-12 sm:px-6 md:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-8 px-3 py-12 sm:px-6 md:grid-cols-3">
         <div>
           <p className="font-display text-lg font-bold">
             Axis<span className="text-accent"> Akademi</span>
