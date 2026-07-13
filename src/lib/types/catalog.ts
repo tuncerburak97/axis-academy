@@ -111,6 +111,12 @@ export const weekKindLabels: Record<WeekKind, string> = {
   specialized: "Pakete özel",
 };
 
+export type DisplaySyllabusWeek = SyllabusWeek | BundleSyllabusWeek;
+
+export function isBundleSyllabusWeek(week: DisplaySyllabusWeek): week is BundleSyllabusWeek {
+  return "week_kind" in week;
+}
+
 export interface TrainingClass {
   id: string;
   module_id: string;

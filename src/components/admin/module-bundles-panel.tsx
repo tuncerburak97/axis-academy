@@ -8,15 +8,16 @@ import { AdminFormDialog } from "@/components/admin/admin-form-dialog";
 import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { BundleFields } from "@/components/admin/module-catalog-fields";
 import { SubmitButton } from "@/components/admin/fields";
-import type { BundlePackage, BundleSyllabusWeek } from "@/lib/types/catalog";
+import type { BundlePackage, BundleSyllabusWeek, SyllabusWeek } from "@/lib/types/catalog";
 
 interface ModuleBundlesPanelProps {
   moduleId: string;
   bundles: BundlePackage[];
   bundleSyllabi: Record<string, BundleSyllabusWeek[]>;
+  moduleWeeks: SyllabusWeek[];
 }
 
-export function ModuleBundlesPanel({ moduleId, bundles, bundleSyllabi }: ModuleBundlesPanelProps) {
+export function ModuleBundlesPanel({ moduleId, bundles, bundleSyllabi, moduleWeeks }: ModuleBundlesPanelProps) {
   return (
     <div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -72,7 +73,11 @@ export function ModuleBundlesPanel({ moduleId, bundles, bundleSyllabi }: ModuleB
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <BundleSyllabusDialog bundle={bundle} weeks={bundleSyllabi[bundle.id] ?? []} />
+                        <BundleSyllabusDialog
+                          bundle={bundle}
+                          weeks={bundleSyllabi[bundle.id] ?? []}
+                          moduleWeeks={moduleWeeks}
+                        />
                         <BundleEditDialog bundle={bundle} />
                         <ConfirmDeleteButton
                           action={deleteBundle}
@@ -116,7 +121,11 @@ export function ModuleBundlesPanel({ moduleId, bundles, bundleSyllabi }: ModuleB
                   </div>
                 </dl>
                 <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-line pt-3">
-                  <BundleSyllabusDialog bundle={bundle} weeks={bundleSyllabi[bundle.id] ?? []} />
+                  <BundleSyllabusDialog
+                    bundle={bundle}
+                    weeks={bundleSyllabi[bundle.id] ?? []}
+                    moduleWeeks={moduleWeeks}
+                  />
                   <BundleEditDialog bundle={bundle} />
                   <ConfirmDeleteButton
                     action={deleteBundle}
@@ -138,7 +147,15 @@ export function ModuleBundlesPanel({ moduleId, bundles, bundleSyllabi }: ModuleB
   );
 }
 
-function BundleSyllabusDialog({ bundle, weeks }: { bundle: BundlePackage; weeks: BundleSyllabusWeek[] }) {
+function BundleSyllabusDialog({
+  bundle,
+  weeks,
+  moduleWeeks,
+}: {
+  bundle: BundlePackage;
+  weeks: BundleSyllabusWeek[];
+  moduleWeeks: SyllabusWeek[];
+}) {
   return (
     <AdminFormDialog
       title={`${bundle.title} — Müfredat`}
@@ -146,7 +163,7 @@ function BundleSyllabusDialog({ bundle, weeks }: { bundle: BundlePackage; weeks:
       triggerVariant="text"
       size="lg"
     >
-      <BundleSyllabusPanel bundle={bundle} weeks={weeks} />
+      <BundleSyllabusPanel bundle={bundle} weeks={weeks} moduleWeeks={moduleWeeks} />
     </AdminFormDialog>
   );
 }

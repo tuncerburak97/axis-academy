@@ -8,7 +8,8 @@ import { WeekProgressTracker } from "@/components/panel/week-progress-tracker";
 import { ProgressStepper } from "@/components/panel/progress-stepper";
 import { buildIndividualProgress } from "@/lib/syllabus";
 import { requestStatusLabels, requestTypeLabels } from "@/lib/types/catalog";
-import type { RequestStatus, SyllabusWeek } from "@/lib/types/catalog";
+import type { RequestStatus } from "@/lib/types/catalog";
+import type { DisplaySyllabusWeek } from "@/lib/types/catalog";
 
 type IndividualTab = "progress" | "syllabus" | "info";
 
@@ -22,7 +23,8 @@ interface IndividualDetailTabsProps {
   progressNote: string;
   userMessage: string | null;
   createdAt: string;
-  syllabus: SyllabusWeek[];
+  syllabus: DisplaySyllabusWeek[];
+  showWeekKind?: boolean;
 }
 
 const requestSteps = ["Talep Alındı", "Planlandı", "Devam Ediyor", "Tamamlandı"];
@@ -51,6 +53,7 @@ export function IndividualDetailTabs({
   userMessage,
   createdAt,
   syllabus,
+  showWeekKind = false,
 }: IndividualDetailTabsProps) {
   const [activeTab, setActiveTab] = useState<IndividualTab>("progress");
   const progress = buildIndividualProgress(status, syllabus.length);
@@ -119,6 +122,7 @@ export function IndividualDetailTabs({
               <div className="mt-5">
                 <WeekProgressTracker
                   compact
+                  showWeekKind={showWeekKind}
                   weeks={syllabus.filter((w) => w.week_number <= progress.effectiveWeek + 1)}
                   effectiveWeek={progress.effectiveWeek}
                   materials={[]}
@@ -137,7 +141,12 @@ export function IndividualDetailTabs({
         )}
 
         {activeTab === "syllabus" && (
-          <WeekProgressTracker weeks={syllabus} effectiveWeek={progress.effectiveWeek} materials={[]} />
+          <WeekProgressTracker
+            weeks={syllabus}
+            effectiveWeek={progress.effectiveWeek}
+            materials={[]}
+            showWeekKind={showWeekKind}
+          />
         )}
 
         {activeTab === "info" && (

@@ -5,6 +5,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Clock, Layers, Sparkles } from "lucide-react";
 import { SyllabusTimeline } from "@/components/public/syllabus-timeline";
+import { BundleComparisonMatrix } from "@/components/public/bundle-comparison-matrix";
 import { Reveal } from "@/components/public/motion-primitives";
 import { weekKindLabels } from "@/lib/types/catalog";
 import type { BundleWithSyllabus } from "@/lib/types/catalog";
@@ -92,6 +93,8 @@ export function BundleComparisonSection({ moduleTitle, bundles }: BundleComparis
             );
           })}
         </div>
+
+        <BundleComparisonMatrix bundles={bundles} />
 
         {/* Sekmeli müfredat */}
         {active && active.weeks.length > 0 && (

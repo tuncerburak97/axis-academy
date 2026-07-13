@@ -78,8 +78,10 @@ src/app/(public)/egitim/[id]/page.tsx
 -- seed_bundle_syllabus.sql
 ```
 
-## 8. Gelecek (v2)
+## 8. v2 (Uygulandı)
 
-- Panel bireysel talep detayında `bundle_id` müfredatını gösterme
-- Admin: modül haftasından pakete tek tıkla kopyala
-- Paket karşılaştırma matrisi (hafta bazlı ✓ tablosu)
+- **Panel:** `resolveSyllabusForRequest()` — paket talebinde `bundle_id` müfredatı gösterilir
+- **Admin:** Modül haftasından pakete tek tıkla kopyala (`copyModuleWeekToBundle`, çekirdek/özel)
+- **Public:** `BundleComparisonMatrix` — hafta bazlı karşılaştırma tablosu
+
+## 9. Gelecek (v3)

@@ -348,3 +348,58 @@ export async function deleteBundleSyllabusWeek(formData: FormData): Promise<void
   revalidateCatalog(moduleId);
   redirect(bundleSyllabusAdminPath(moduleId, undefined, true));
 }
+
+export async function copyModuleWeekToBundle(formData: FormData): Promise<void> {
+  const { supabase } = await requireAdmin();
+  const moduleId = String(formData.get("module_id"));
+  const bundleId = String(formData.get("bundle_id"));
+  const moduleWeekId = String(formData.get("module_week_id"));
+  const weekKind = String(formData.get("week_kind") ?? "core");
+
+  if (!moduleId || !bundleId || !moduleWeekId) {
+    redirect(bundleSyllabusAdminPath(moduleId, "validation"));
+  }
+
+  const { data: moduleWeek } = await supabase
+    .from("module_syllabus_weeks")
+    .select("id, title, description, sort_order")
+    .eq("id", moduleWeekId)
+    .maybeSingle();
+
+  if (!moduleWeek) redirect(bundleSyllabusAdminPath(moduleId, "db"));
+
+  const { data: duplicate } = await supabase
+    .from("bundle_syllabus_weeks")
+    .select("id")
+    .eq("bundle_id", bundleId)
+    .eq("source_module_week_id", moduleWeekId)
+    .maybeSingle();
+
+  if (duplicate) redirect(bundleSyllabusAdminPath(moduleId, "validation"));
+
+  const { data: lastWeek } = await supabase
+    .from("bundle_syllabus_weeks")
+    .select("week_number")
+    .eq("bundle_id", bundleId)
+    .order("week_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const nextWeekNumber = (lastWeek?.week_number ?? 0) + 1;
+  const parsedKind = weekKind === "specialized" ? "specialized" : "core";
+
+  const { error } = await supabase.from("bundle_syllabus_weeks").insert({
+    bundle_id: bundleId,
+    week_number: nextWeekNumber,
+    title: moduleWeek.title,
+    description: moduleWeek.description,
+    week_kind: parsedKind,
+    source_module_week_id: moduleWeek.id,
+    sort_order: moduleWeek.sort_order || nextWeekNumber,
+  });
+
+  if (error) redirect(bundleSyllabusAdminPath(moduleId, "db"));
+
+  revalidateCatalog(moduleId);
+  redirect(bundleSyllabusAdminPath(moduleId, undefined, true));
+}

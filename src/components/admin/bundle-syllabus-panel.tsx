@@ -1,8 +1,9 @@
-// src/components/admin/bundle-syllabus-panel.tsx — paket müfredatı CRUD (hibrit: çekirdek / özel)
+// src/components/admin/bundle-syllabus-panel.tsx — paket müfredatı CRUD + modülden kopyala
 "use client";
 
-import { Plus } from "lucide-react";
+import { Copy, Plus } from "lucide-react";
 import {
+  copyModuleWeekToBundle,
   createBundleSyllabusWeek,
   deleteBundleSyllabusWeek,
   updateBundleSyllabusWeek,
@@ -11,19 +12,58 @@ import { AdminFormDialog } from "@/components/admin/admin-form-dialog";
 import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { NumberInput, SelectField, SubmitButton, TextArea, TextInput } from "@/components/admin/fields";
 import { weekKindLabels } from "@/lib/types/catalog";
-import type { BundlePackage, BundleSyllabusWeek } from "@/lib/types/catalog";
+import type { BundlePackage, BundleSyllabusWeek, SyllabusWeek } from "@/lib/types/catalog";
 
 interface BundleSyllabusPanelProps {
   bundle: BundlePackage;
   weeks: BundleSyllabusWeek[];
+  moduleWeeks: SyllabusWeek[];
 }
 
-export function BundleSyllabusPanel({ bundle, weeks }: BundleSyllabusPanelProps) {
+export function BundleSyllabusPanel({ bundle, weeks, moduleWeeks }: BundleSyllabusPanelProps) {
+  const copiedSourceIds = new Set(
+    weeks.map((w) => w.source_module_week_id).filter((id): id is string => Boolean(id)),
+  );
+  const availableModuleWeeks = moduleWeeks.filter((w) => !copiedSourceIds.has(w.id));
+
   return (
     <div className="space-y-4">
       <p className="text-sm text-ink-soft">
-        Public sayfada &quot;Paketleri Karşılaştır&quot; bölümünde görünür. Ortak temel haftalar paketler arası tutarlılık sağlar.
+        Public sayfada &quot;Paketleri Karşılaştır&quot; bölümünde görünür. Modül müfredatından tek tıkla kopyalayabilirsiniz.
       </p>
+
+      {availableModuleWeeks.length > 0 && (
+        <div className="rounded-xl border border-dashed border-line bg-surface p-4">
+          <p className="text-xs font-semibold uppercase tracking-wide text-ink-soft">Modülden kopyala</p>
+          <ul className="mt-3 space-y-2">
+            {availableModuleWeeks.map((moduleWeek) => (
+              <li
+                key={moduleWeek.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-white px-3 py-2 text-sm"
+              >
+                <span>
+                  <span className="font-semibold">H{moduleWeek.week_number}</span>
+                  <span className="text-ink-soft"> — {moduleWeek.title}</span>
+                </span>
+                <div className="flex items-center gap-2">
+                  <CopyWeekForm
+                    bundle={bundle}
+                    moduleWeek={moduleWeek}
+                    weekKind="core"
+                    label="Çekirdek"
+                  />
+                  <CopyWeekForm
+                    bundle={bundle}
+                    moduleWeek={moduleWeek}
+                    weekKind="specialized"
+                    label="Özel"
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <AdminFormDialog
         title={`${bundle.title} — Hafta Ekle`}
@@ -42,7 +82,7 @@ export function BundleSyllabusPanel({ bundle, weeks }: BundleSyllabusPanelProps)
 
       {weeks.length === 0 ? (
         <p className="rounded-xl border border-dashed border-line bg-surface p-4 text-sm text-ink-soft">
-          Bu paket için henüz müfredat yok.
+          Bu paket için henüz müfredat yok. Yukarıdan modül haftası kopyalayın veya manuel ekleyin.
         </p>
       ) : (
         <div className="space-y-3">
@@ -88,6 +128,34 @@ export function BundleSyllabusPanel({ bundle, weeks }: BundleSyllabusPanelProps)
         </div>
       )}
     </div>
+  );
+}
+
+function CopyWeekForm({
+  bundle,
+  moduleWeek,
+  weekKind,
+  label,
+}: {
+  bundle: BundlePackage;
+  moduleWeek: SyllabusWeek;
+  weekKind: "core" | "specialized";
+  label: string;
+}) {
+  return (
+    <form action={copyModuleWeekToBundle}>
+      <input type="hidden" name="module_id" value={bundle.module_id} />
+      <input type="hidden" name="bundle_id" value={bundle.id} />
+      <input type="hidden" name="module_week_id" value={moduleWeek.id} />
+      <input type="hidden" name="week_kind" value={weekKind} />
+      <button
+        type="submit"
+        className="inline-flex items-center gap-1 rounded-lg border border-line px-2.5 py-1 text-xs font-semibold text-ink-soft transition-colors hover:bg-surface hover:text-ink"
+      >
+        <Copy className="size-3" aria-hidden />
+        {label}
+      </button>
+    </form>
   );
 }
 

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { getModuleSyllabus } from "@/lib/queries/catalog";
+import { isBundleSyllabusWeek, resolveSyllabusForRequest } from "@/lib/syllabus-resolve";
 import { getMyIndividualRequestById } from "@/lib/queries/member";
 import { IndividualDetailTabs } from "@/components/panel/individual-detail-tabs";
 import { requestTypeLabels } from "@/lib/types/catalog";
@@ -21,7 +21,11 @@ export default async function IndividualRequestDetailPage({ params }: { params: 
   const request = await getMyIndividualRequestById(id);
   if (!request) notFound();
 
-  const syllabus = await getModuleSyllabus(request.module_id);
+  const syllabus = await resolveSyllabusForRequest({
+    module_id: request.module_id,
+    bundle_id: request.bundle_id,
+    request_type: request.request_type,
+  });
 
   const subtitle =
     request.request_type === "bundle" && request.bundle_packages?.title
@@ -50,6 +54,7 @@ export default async function IndividualRequestDetailPage({ params }: { params: 
           userMessage={request.user_message}
           createdAt={request.created_at}
           syllabus={syllabus}
+          showWeekKind={request.request_type === "bundle" && syllabus.some(isBundleSyllabusWeek)}
         />
       </div>
     </>

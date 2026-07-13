@@ -3,14 +3,16 @@
 
 import { Check, ClipboardList, FileText, Lock, PlayCircle } from "lucide-react";
 import { countMaterialsForWeek, getWeekStatus, type WeekStatus } from "@/lib/syllabus";
-import type { ClassMaterial, SyllabusWeek } from "@/lib/types/catalog";
+import { isBundleSyllabusWeek, weekKindLabels, type DisplaySyllabusWeek } from "@/lib/types/catalog";
+import type { ClassMaterial } from "@/lib/types/catalog";
 
 interface WeekProgressTrackerProps {
-  weeks: SyllabusWeek[];
+  weeks: DisplaySyllabusWeek[];
   effectiveWeek: number;
   materials: ClassMaterial[];
   /** Tek hafta / odak görünümü: daha küçük rozet, daha sıkı düzen */
   compact?: boolean;
+  showWeekKind?: boolean;
 }
 
 const statusStyles: Record<WeekStatus, { ring: string; bg: string; text: string; icon: typeof Check }> = {
@@ -25,7 +27,7 @@ const statusLabels: Record<WeekStatus, string> = {
   upcoming: "Yaklaşan",
 };
 
-export function WeekProgressTracker({ weeks, effectiveWeek, materials, compact = false }: WeekProgressTrackerProps) {
+export function WeekProgressTracker({ weeks, effectiveWeek, materials, compact = false, showWeekKind = false }: WeekProgressTrackerProps) {
   if (weeks.length === 0) {
     return (
       <p className="rounded-xl border border-dashed border-line bg-surface p-8 text-center text-sm text-ink-soft">
@@ -85,10 +87,21 @@ export function WeekProgressTracker({ weeks, effectiveWeek, materials, compact =
             >
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="font-display font-semibold">{week.title}</h3>
-                <span className={`inline-flex items-center gap-1 text-xs font-semibold ${style.text}`}>
-                  <StatusIcon className="size-3.5" aria-hidden />
-                  {statusLabels[status]}
-                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {showWeekKind && isBundleSyllabusWeek(week) && (
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        week.week_kind === "core" ? "bg-accent-soft text-accent" : "bg-amber-soft text-amber-900"
+                      }`}
+                    >
+                      {weekKindLabels[week.week_kind]}
+                    </span>
+                  )}
+                  <span className={`inline-flex items-center gap-1 text-xs font-semibold ${style.text}`}>
+                    <StatusIcon className="size-3.5" aria-hidden />
+                    {statusLabels[status]}
+                  </span>
+                </div>
               </div>
               {week.description && (
                 <p className="mt-2 text-sm leading-relaxed text-ink-soft">{week.description}</p>

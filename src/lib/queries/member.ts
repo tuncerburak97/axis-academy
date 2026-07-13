@@ -46,6 +46,7 @@ export async function getOpenClasses(moduleId: string): Promise<OpenClass[]> {
 export interface MyIndividualRequest {
   id: string;
   module_id: string;
+  bundle_id: string | null;
   request_type: "bundle" | "custom" | "schedule";
   total_hours: number | null;
   calculated_price: number;
@@ -77,7 +78,7 @@ export async function getMyIndividualRequests(): Promise<MyIndividualRequest[]> 
   const supabase = await createClient();
   const { data } = await supabase
     .from("individual_requests")
-    .select("id, module_id, request_type, total_hours, calculated_price, status, progress_note, user_message, created_at, education_modules(title), bundle_packages(title)")
+    .select("id, module_id, bundle_id, request_type, total_hours, calculated_price, status, progress_note, user_message, created_at, education_modules(title), bundle_packages(title)")
     .order("created_at", { ascending: false });
   return (data ?? []) as unknown as MyIndividualRequest[];
 }
@@ -86,7 +87,7 @@ export async function getMyIndividualRequestById(id: string): Promise<MyIndividu
   const supabase = await createClient();
   const { data } = await supabase
     .from("individual_requests")
-    .select("id, module_id, request_type, total_hours, calculated_price, status, progress_note, user_message, created_at, education_modules(title), bundle_packages(title)")
+    .select("id, module_id, bundle_id, request_type, total_hours, calculated_price, status, progress_note, user_message, created_at, education_modules(title), bundle_packages(title)")
     .eq("id", id)
     .maybeSingle();
   return (data ?? null) as unknown as MyIndividualRequest | null;

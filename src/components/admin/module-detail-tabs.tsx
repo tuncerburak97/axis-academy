@@ -82,7 +82,12 @@ export function ModuleDetailTabs({ module, plans, bundles, bundleSyllabi, syllab
         {activeTab === "syllabus" && <ModuleSyllabusPanel moduleId={module.id} weeks={syllabus} />}
         {activeTab === "plans" && <ModulePlansPanel moduleId={module.id} plans={plans} />}
         {activeTab === "bundles" && (
-          <ModuleBundlesPanel moduleId={module.id} bundles={bundles} bundleSyllabi={bundleSyllabi} />
+          <ModuleBundlesPanel
+            moduleId={module.id}
+            bundles={bundles}
+            bundleSyllabi={bundleSyllabi}
+            moduleWeeks={syllabus}
+          />
         )}
       </div>
     </div>
