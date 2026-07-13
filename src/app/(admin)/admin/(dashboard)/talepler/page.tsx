@@ -2,6 +2,8 @@
 // analiz/tez ve bireysel eğitim talepleri, durum + not güncelleme, dosya indirme
 import type { Metadata } from "next";
 import { Download } from "lucide-react";
+import { FilePreview } from "@/components/shared/file-preview";
+import { supportsPreview } from "@/lib/file-preview";
 import { createClient } from "@/lib/supabase/server";
 import { updateContactRequest, updateIndividualRequest, updateInquiry } from "@/lib/actions/admin-requests";
 import {
@@ -137,12 +139,24 @@ export default async function RequestManagementPage({
                 </p>
                 <p className="mt-2 whitespace-pre-wrap text-ink-soft">{request.message}</p>
                 {request.file_path && signedUrls.has(request.file_path) && (
-                  <a
-                    href={signedUrls.get(request.file_path)}
-                    className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline"
-                  >
-                    <Download className="size-4" aria-hidden /> Ekli dosyayı indir
-                  </a>
+                  <div className="mt-3">
+                    <a
+                      href={signedUrls.get(request.file_path)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline"
+                    >
+                      <Download className="size-4" aria-hidden /> Ekli dosyayı indir
+                    </a>
+                    {supportsPreview(request.file_path) && (
+                      <FilePreview
+                        url={signedUrls.get(request.file_path)!}
+                        title="Ek dosya"
+                        filePath={request.file_path}
+                        compact
+                      />
+                    )}
+                  </div>
                 )}
               </div>
 

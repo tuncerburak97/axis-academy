@@ -5,8 +5,8 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { Download, FileText } from "lucide-react";
-import { isPdfPath } from "@/lib/materials";
-import { PdfPreview } from "@/components/panel/pdf-preview";
+import { FilePreview } from "@/components/shared/file-preview";
+import { supportsPreview } from "@/lib/file-preview";
 import { materialCategoryLabels } from "@/lib/types/catalog";
 import type { ClassMaterial, MaterialCategory } from "@/lib/types/catalog";
 
@@ -98,8 +98,12 @@ export function ClassMaterialsTabs({ materials }: ClassMaterialsTabsProps) {
                 >
                   <Download className="size-4" aria-hidden /> Dokümanı İndir
                 </a>
-                {material.file_path && isPdfPath(material.file_path) && (
-                  <PdfPreview url={material.signedUrl} title={material.title} />
+                {material.file_path && supportsPreview(material.file_path) && (
+                  <FilePreview
+                    url={material.signedUrl}
+                    title={material.title}
+                    filePath={material.file_path}
+                  />
                 )}
               </div>
             )}

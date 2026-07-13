@@ -6,13 +6,13 @@ import ReactMarkdown from "react-markdown";
 import { Download, FileText } from "lucide-react";
 import { ClassProgressHero } from "@/components/panel/class-progress-hero";
 import { WeekProgressTracker } from "@/components/panel/week-progress-tracker";
-import { PdfPreview } from "@/components/panel/pdf-preview";
+import { FilePreview } from "@/components/shared/file-preview";
+import { supportsPreview } from "@/lib/file-preview";
 import {
   aggregateMaterialStats,
   buildClassProgress,
   type ClassProgressSnapshot,
 } from "@/lib/syllabus";
-import { isPdfPath } from "@/lib/materials";
 import { ClassAnnouncementsList } from "@/components/panel/class-announcements-list";
 import type { ClassAnnouncement, ClassMaterial, SyllabusWeek } from "@/lib/types/catalog";
 import type { MaterialWithUrl } from "@/components/panel/class-materials-tabs";
@@ -223,8 +223,12 @@ function MaterialList({
               >
                 <Download className="size-4" aria-hidden /> İndir
               </a>
-              {material.file_path && isPdfPath(material.file_path) && (
-                <PdfPreview url={material.signedUrl} title={material.title} />
+              {material.file_path && supportsPreview(material.file_path) && (
+                <FilePreview
+                  url={material.signedUrl}
+                  title={material.title}
+                  filePath={material.file_path}
+                />
               )}
             </div>
           )}

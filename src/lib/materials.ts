@@ -44,9 +44,7 @@ export function getFileExtension(filename: string): string {
   return dot >= 0 ? filename.slice(dot).toLowerCase() : "";
 }
 
-export function isPdfPath(filePath: string): boolean {
-  return filePath.toLowerCase().endsWith(".pdf");
-}
+export { isPdfPath } from "@/lib/file-preview";
 
 export function validateMaterialFile(file: File): { ok: true } | { ok: false; code: MaterialFileErrorCode } {
   if (file.size > MAX_MATERIAL_FILE_SIZE) {

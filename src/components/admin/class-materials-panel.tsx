@@ -7,7 +7,8 @@ import { createMaterial, deleteMaterial, updateMaterial } from "@/lib/actions/ad
 import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
 import { materialCategoryLabels } from "@/lib/types/catalog";
 import type { ClassMaterial, MaterialCategory } from "@/lib/types/catalog";
-import { isPdfPath } from "@/lib/materials";
+import { FilePreview } from "@/components/shared/file-preview";
+import { supportsPreview } from "@/lib/file-preview";
 import { NumberInput, SelectField, SubmitButton, TextArea, TextInput } from "@/components/admin/fields";
 
 const categoryOrder: MaterialCategory[] = ["general", "weekly", "homework", "note"];
@@ -125,7 +126,7 @@ function CategoryMaterials({
               )}
             </summary>
             {signedUrl && (
-              <div className="mt-3 flex flex-wrap gap-3">
+              <div className="mt-3">
                 <a
                   href={signedUrl}
                   target="_blank"
@@ -134,11 +135,12 @@ function CategoryMaterials({
                 >
                   <Download className="size-4" aria-hidden /> Dosyayı Aç
                 </a>
-                {isPdfPath(material.file_path!) && (
-                  <iframe
-                    src={signedUrl}
-                    title={`${material.title} önizleme`}
-                    className="h-48 w-full rounded-lg border border-line sm:h-64"
+                {material.file_path && supportsPreview(material.file_path) && (
+                  <FilePreview
+                    url={signedUrl}
+                    title={material.title}
+                    filePath={material.file_path}
+                    compact
                   />
                 )}
               </div>
