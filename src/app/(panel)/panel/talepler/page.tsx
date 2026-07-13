@@ -27,14 +27,14 @@ export default async function MyRequestsPage({
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
           <h1 className="font-display text-2xl font-bold tracking-tight">Taleplerim</h1>
           <p className="mt-1 text-sm text-ink-soft">Analiz, tez ve eğitim taleplerinin geçmişi.</p>
         </div>
         <Link
           href="/panel/talepler/yeni"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong sm:w-auto"
         >
           <Plus className="size-4" aria-hidden /> Yeni Analiz/Tez Talebi
         </Link>

@@ -80,23 +80,23 @@ export default async function ClassManagementPage({
         </h2>
         <div className="mt-4 space-y-3">
           {pendingEnrollments.map((enrollment) => (
-            <div key={enrollment.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white p-4 shadow-sm">
-              <div className="text-sm">
+            <div key={enrollment.id} className="flex flex-col gap-3 rounded-xl border border-line bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 text-sm">
                 <p className="font-semibold">{enrollment.profiles?.full_name || "İsimsiz kullanıcı"}</p>
-                <p className="text-ink-soft">
+                <p className="break-words text-ink-soft">
                   {enrollment.classes?.title} · {new Date(enrollment.created_at).toLocaleDateString("tr-TR")}
                 </p>
               </div>
-              <div className="flex gap-2">
-                <form action={approveEnrollment}>
+              <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+                <form action={approveEnrollment} className="w-full sm:w-auto">
                   <input type="hidden" name="enrollment_id" value={enrollment.id} />
-                  <button type="submit" className="rounded-lg bg-success px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90">
+                  <button type="submit" className="min-h-11 w-full rounded-lg bg-success px-4 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 sm:w-auto">
                     Onayla
                   </button>
                 </form>
-                <form action={rejectEnrollment}>
+                <form action={rejectEnrollment} className="w-full sm:w-auto">
                   <input type="hidden" name="enrollment_id" value={enrollment.id} />
-                  <button type="submit" className="rounded-lg border border-line px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50">
+                  <button type="submit" className="min-h-11 w-full rounded-lg border border-line px-4 py-2.5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-50 sm:w-auto">
                     Reddet
                   </button>
                 </form>
@@ -121,9 +121,9 @@ export default async function ClassManagementPage({
             ).length;
             return (
               <details key={trainingClass.id} className="rounded-xl border border-line bg-white p-5 shadow-sm">
-                <summary className="flex cursor-pointer flex-wrap items-center gap-3 text-sm">
-                  <span className="font-semibold">{trainingClass.title}</span>
-                  <span className="text-ink-soft">{trainingClass.education_modules?.title}</span>
+                <summary className="flex min-h-11 cursor-pointer flex-wrap items-center gap-3 text-sm">
+                  <span className="min-w-0 font-semibold">{trainingClass.title}</span>
+                  <span className="min-w-0 break-words text-ink-soft">{trainingClass.education_modules?.title}</span>
                   <span className="text-ink-soft">{new Date(trainingClass.start_date).toLocaleDateString("tr-TR")}</span>
                   <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">
                     {approvedCount}/{trainingClass.capacity} kişi
@@ -132,16 +132,16 @@ export default async function ClassManagementPage({
                     {classStatusLabels[trainingClass.status]}
                   </span>
                 </summary>
-                <form action={updateClassStatus} className="mt-4 flex items-end gap-3">
+                <form action={updateClassStatus} className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
                   <input type="hidden" name="class_id" value={trainingClass.id} />
-                  <div className="w-48">
+                  <div className="w-full sm:w-48">
                     <SelectField label="Durum" name="status" defaultValue={trainingClass.status} options={statusOptions} />
                   </div>
                   <SubmitButton>Durumu Güncelle</SubmitButton>
                 </form>
                 <a
                   href={`/admin/siniflar/${trainingClass.id}`}
-                  className="mt-3 inline-flex text-sm font-semibold text-accent hover:underline"
+                  className="mt-3 inline-flex min-h-11 items-center text-sm font-semibold text-accent hover:underline"
                 >
                   İçerik ve Doküman Yönetimi →
                 </a>

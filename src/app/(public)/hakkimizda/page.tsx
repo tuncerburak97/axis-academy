@@ -83,8 +83,8 @@ export default function AboutPage() {
               <p className="inline-flex rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold tracking-wide text-accent">
                 Kurumsal
               </p>
-              <h1 className="mt-4 font-display text-4xl font-bold tracking-tight md:text-5xl">
-                Akademiden gelen disiplin,<br />sahada kanıtlanmış deneyim
+              <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl">
+                Akademiden gelen disiplin, sahada kanıtlanmış deneyim
               </h1>
             </FadeUp>
             <FadeUp delay={0.15}>
@@ -124,7 +124,7 @@ export default function AboutPage() {
       {/* Sayaçlı istatistik bandı */}
       <section aria-label="Rakamlarla Axis Akademi" className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <Reveal>
-          <div className="grid gap-10 rounded-2xl border border-line bg-white px-8 py-10 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-10 rounded-2xl border border-line bg-white px-4 py-8 shadow-sm sm:px-8 sm:py-10 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((stat) => (
               <StatCounter key={stat.label} value={stat.value} label={stat.label} />
             ))}

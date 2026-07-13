@@ -20,7 +20,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? "Giriş yapılıyor…" : "Giriş Yap"}
         </button>

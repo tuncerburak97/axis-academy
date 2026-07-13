@@ -71,7 +71,7 @@ export default async function HomePage() {
               </p>
             </FadeUp>
             <FadeUp delay={0.1}>
-              <h1 className="mt-5 font-display text-4xl font-bold leading-tight tracking-tight md:text-5xl xl:text-6xl">
+              <h1 className="mt-5 font-display text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl xl:text-6xl">
                 {hero.title}
               </h1>
             </FadeUp>
@@ -135,7 +135,7 @@ export default async function HomePage() {
       <section aria-labelledby="services-heading" className="bg-surface py-16 md:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
-            <h2 id="services-heading" className="font-display text-3xl font-bold tracking-tight">
+            <h2 id="services-heading" className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
               Üç hizmet, tek çatı
             </h2>
             <p className="mt-2 max-w-lg text-ink-soft">Hangi aşamada olursanız olun, ihtiyacınıza uyan net bir çözüm var.</p>
@@ -183,7 +183,7 @@ export default async function HomePage() {
       <section aria-labelledby="how-heading" className="py-16 md:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <Reveal>
-            <h2 id="how-heading" className="font-display text-3xl font-bold tracking-tight">
+            <h2 id="how-heading" className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
               Nasıl çalışır?
             </h2>
           </Reveal>

@@ -57,7 +57,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
                   </span>
                 )}
               </div>
-              <h1 className="mt-4 font-display text-4xl font-bold tracking-tight">{educationModule.title}</h1>
+              <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">{educationModule.title}</h1>
               <p className="mt-3 max-w-2xl text-lg text-ink-soft">{educationModule.description}</p>
             </FadeUp>
           </div>

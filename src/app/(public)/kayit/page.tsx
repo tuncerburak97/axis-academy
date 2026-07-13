@@ -13,7 +13,7 @@ export default async function RegisterPage() {
   if (user) redirect("/panel");
 
   return (
-    <section className="mx-auto flex max-w-md flex-col px-4 py-20 sm:px-6">
+    <section className="mx-auto flex max-w-md flex-col px-4 py-12 sm:px-6 sm:py-20">
       <h1 className="font-display text-3xl font-bold tracking-tight">Kayıt Ol</h1>
       <p className="mt-2 text-sm text-ink-soft">
         Zaten üye misin?{" "}

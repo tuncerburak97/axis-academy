@@ -41,7 +41,7 @@ export function CustomModuleBuilder({ moduleId, topics, hourlyRate }: CustomModu
   }
 
   return (
-    <form action={formAction} className="rounded-xl border border-line bg-white p-6 shadow-sm">
+    <form action={formAction} className="rounded-xl border border-line bg-white p-4 shadow-sm sm:p-6">
       <input type="hidden" name="module_id" value={moduleId} />
       <FormStatus error={state.error} />
 
@@ -51,7 +51,7 @@ export function CustomModuleBuilder({ moduleId, topics, hourlyRate }: CustomModu
           {topics.map((topic) => (
             <label
               key={topic.id}
-              className={`flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-sm transition-colors ${
+              className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm transition-colors ${
                 selectedIds.has(topic.id) ? "border-accent bg-accent-soft" : "border-line hover:bg-surface"
               }`}
             >
@@ -61,7 +61,7 @@ export function CustomModuleBuilder({ moduleId, topics, hourlyRate }: CustomModu
                 value={topic.id}
                 checked={selectedIds.has(topic.id)}
                 onChange={() => toggleTopic(topic.id)}
-                className="mt-0.5 size-4 accent-[var(--color-accent)]"
+                className="mt-0.5 size-5 shrink-0 accent-[var(--color-accent)]"
               />
               <span>
                 <span className="font-medium">{topic.title}</span>
@@ -72,8 +72,8 @@ export function CustomModuleBuilder({ moduleId, topics, hourlyRate }: CustomModu
         </div>
       </fieldset>
 
-      <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
-        <div className="w-36">
+      <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="w-full sm:w-36">
           <label htmlFor="custom-total-hours" className="block text-sm font-medium">Toplam saat</label>
           <input
             id="custom-total-hours"
@@ -83,10 +83,10 @@ export function CustomModuleBuilder({ moduleId, topics, hourlyRate }: CustomModu
             max={500}
             value={hours || ""}
             onChange={(event) => setHours(Number(event.target.value))}
-            className="mt-1 w-full rounded-lg border border-line px-3 py-2 text-sm transition-colors focus:border-accent"
+            className="mt-1 min-h-11 w-full rounded-lg border border-line px-3 py-2.5 text-sm transition-colors focus:border-accent"
           />
         </div>
-        <div aria-live="polite" className="text-right">
+        <div aria-live="polite" className="text-left sm:text-right">
           <p className="text-xs font-medium text-ink-soft">Tahmini fiyat</p>
           <p className="font-display text-2xl font-bold">
             {estimatedPrice !== null && hours > 0 ? `${estimatedPrice.toLocaleString("tr-TR")}₺` : "—"}
@@ -105,7 +105,7 @@ export function CustomModuleBuilder({ moduleId, topics, hourlyRate }: CustomModu
         <button
           type="submit"
           disabled={isPending || selectedIds.size === 0 || hours < 1}
-          className="mt-5 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-5 min-h-11 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? "Talep oluşturuluyor…" : "Talep Oluştur"}
         </button>

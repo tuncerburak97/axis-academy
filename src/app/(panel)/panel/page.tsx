@@ -134,7 +134,7 @@ export default async function MyTrainingsPage({
                 {enrollment.status !== "pending" && (
                   <Link
                     href={`/panel/sinif/${enrollment.class_id}`}
-                    className="mt-4 inline-flex rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
+                    className="mt-4 inline-flex min-h-11 items-center rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
                   >
                     Eğitim İçeriğine Git
                   </Link>

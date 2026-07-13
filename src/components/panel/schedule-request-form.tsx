@@ -14,7 +14,7 @@ export function ScheduleRequestForm({ moduleId }: { moduleId: string }) {
 
   return (
     <details className="rounded-xl border border-line bg-white shadow-sm">
-      <summary className="flex cursor-pointer items-center gap-2.5 p-5 text-sm font-semibold">
+      <summary className="flex min-h-11 cursor-pointer items-center gap-2.5 p-4 text-sm font-semibold sm:p-5">
         <span className="rounded-lg bg-amber-soft p-2 text-ink">
           <CalendarClock className="size-4" aria-hidden />
         </span>
@@ -40,7 +40,7 @@ export function ScheduleRequestForm({ moduleId }: { moduleId: string }) {
         <button
           type="submit"
           disabled={isPending}
-          className="rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 w-full rounded-lg bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
         >
           {isPending ? "Gönderiliyor…" : "Tarih Talebi Gönder"}
         </button>

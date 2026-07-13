@@ -39,7 +39,8 @@ export function ClassMaterialsTabs({ materials }: ClassMaterialsTabsProps) {
   return (
     <div>
       {/* Tab başlıkları */}
-      <div role="tablist" aria-label="Materyal kategorileri" className="flex gap-1 overflow-x-auto border-b border-line">
+      <div role="tablist" aria-label="Materyal kategorileri" className="scroll-fade-x border-b border-line">
+        <div className="flex gap-1 overflow-x-auto scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {availableTabs.map((category) => {
           const isActive = category === activeTab;
           const count = materials.filter((material) => material.category === category).length;
@@ -49,7 +50,7 @@ export function ClassMaterialsTabs({ materials }: ClassMaterialsTabsProps) {
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveTab(category)}
-              className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
+              className={`min-h-11 shrink-0 snap-start whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition-colors ${
                 isActive ? "border-accent text-accent" : "border-transparent text-ink-soft hover:text-ink"
               }`}
             >
@@ -58,12 +59,13 @@ export function ClassMaterialsTabs({ materials }: ClassMaterialsTabsProps) {
             </button>
           );
         })}
+        </div>
       </div>
 
       {/* Aktif tab içeriği */}
       <div role="tabpanel" className="mt-6 space-y-5">
         {activeMaterials.map((material) => (
-          <article key={material.id} className="rounded-xl border border-line bg-white p-6 shadow-sm">
+          <article key={material.id} className="rounded-xl border border-line bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="flex items-center gap-2 font-display text-lg font-semibold">
                 <FileText className="size-5 text-accent" aria-hidden />
@@ -77,15 +79,17 @@ export function ClassMaterialsTabs({ materials }: ClassMaterialsTabsProps) {
             </div>
 
             {material.content_md && (
-              <div className="prose-custom mt-4">
-                <ReactMarkdown>{material.content_md}</ReactMarkdown>
+              <div className="prose-custom mt-4 [&_table]:block [&_table]:w-full">
+                <div className="prose-table-wrap">
+                  <ReactMarkdown>{material.content_md}</ReactMarkdown>
+                </div>
               </div>
             )}
 
             {material.signedUrl && (
               <a
                 href={material.signedUrl}
-                className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-accent-soft px-4 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
+                className="mt-4 inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-accent-soft px-4 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
               >
                 <Download className="size-4" aria-hidden /> Dokümanı İndir
               </a>

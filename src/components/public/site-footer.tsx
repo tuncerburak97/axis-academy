@@ -15,18 +15,18 @@ export function SiteFooter() {
         </div>
         <nav aria-label="Hizmetler" className="text-sm">
           <p className="font-semibold">Hizmetler</p>
-          <ul className="mt-3 space-y-2 text-ink-soft">
-            <li><Link className="hover:text-ink" href="/analiz">Bibliyometrik &amp; İstatistiksel Analiz</Link></li>
-            <li><Link className="hover:text-ink" href="/egitim">Excel / Word / PowerPoint Eğitimleri</Link></li>
-            <li><Link className="hover:text-ink" href="/tez-duzenleme">Tez Düzenleme</Link></li>
+          <ul className="mt-3 space-y-1 text-ink-soft">
+            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/analiz">Bibliyometrik &amp; İstatistiksel Analiz</Link></li>
+            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/egitim">Excel / Word / PowerPoint Eğitimleri</Link></li>
+            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/tez-duzenleme">Tez Düzenleme</Link></li>
           </ul>
         </nav>
         <nav aria-label="Kurumsal" className="text-sm">
           <p className="font-semibold">Kurumsal</p>
-          <ul className="mt-3 space-y-2 text-ink-soft">
-            <li><Link className="hover:text-ink" href="/hakkimizda">Hakkımızda</Link></li>
-            <li><Link className="hover:text-ink" href="/sss">Sıkça Sorulan Sorular</Link></li>
-            <li><Link className="hover:text-ink" href="/iletisim">İletişim</Link></li>
+          <ul className="mt-3 space-y-1 text-ink-soft">
+            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/hakkimizda">Hakkımızda</Link></li>
+            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/sss">Sıkça Sorulan Sorular</Link></li>
+            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/iletisim">İletişim</Link></li>
           </ul>
         </nav>
       </div>

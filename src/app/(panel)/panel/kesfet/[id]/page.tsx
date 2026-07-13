@@ -64,34 +64,68 @@ export default async function MemberModuleDetailPage({
             Fiyat planları henüz tanımlanmadı.
           </p>
         ) : (
-          <div className="mt-3 overflow-x-auto rounded-xl border border-line bg-white shadow-sm">
-            <table className="w-full text-left text-sm">
-              <thead>
-                <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
-                  <th scope="col" className="px-4 py-3 font-semibold">Eğitim Tipi</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Kişi</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Fiyat</th>
-                  <th scope="col" className="px-4 py-3 font-semibold">Not</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activePlans.map((plan) => (
-                  <tr key={plan.id} className="border-b border-line last:border-0">
-                    <td className="px-4 py-3 font-medium">{trainingTypeLabels[plan.training_type]}</td>
-                    <td className="px-4 py-3 text-ink-soft">
-                      {plan.min_people === plan.max_people ? plan.min_people : `${plan.min_people}-${plan.max_people}`} kişi
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="rounded-full bg-amber-soft px-2.5 py-0.5 text-xs font-bold">
-                        {plan.price.toLocaleString("tr-TR")}₺ · {priceUnitLabels[plan.unit]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-ink-soft">{plan.note}</td>
+          <>
+            {/* Mobil: kart görünümü */}
+            <div className="mt-3 space-y-3 md:hidden">
+              {activePlans.map((plan) => (
+                <article key={plan.id} className="rounded-xl border border-line bg-white p-4 shadow-sm">
+                  <p className="font-semibold">{trainingTypeLabels[plan.training_type]}</p>
+                  <dl className="mt-2 space-y-1.5 text-sm">
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-ink-soft">Kişi</dt>
+                      <dd>
+                        {plan.min_people === plan.max_people ? plan.min_people : `${plan.min_people}-${plan.max_people}`} kişi
+                      </dd>
+                    </div>
+                    <div className="flex justify-between gap-4">
+                      <dt className="text-ink-soft">Fiyat</dt>
+                      <dd>
+                        <span className="rounded-full bg-amber-soft px-2.5 py-0.5 text-xs font-bold">
+                          {plan.price.toLocaleString("tr-TR")}₺ · {priceUnitLabels[plan.unit]}
+                        </span>
+                      </dd>
+                    </div>
+                    {plan.note && (
+                      <div className="border-t border-line pt-2">
+                        <dt className="text-ink-soft">Not</dt>
+                        <dd className="mt-1 text-ink-soft">{plan.note}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </article>
+              ))}
+            </div>
+
+            {/* Desktop: tablo */}
+            <div className="mt-3 hidden overflow-x-auto rounded-xl border border-line bg-white shadow-sm md:block">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">
+                    <th scope="col" className="px-4 py-3 font-semibold">Eğitim Tipi</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Kişi</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Fiyat</th>
+                    <th scope="col" className="px-4 py-3 font-semibold">Not</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {activePlans.map((plan) => (
+                    <tr key={plan.id} className="border-b border-line last:border-0">
+                      <td className="px-4 py-3 font-medium">{trainingTypeLabels[plan.training_type]}</td>
+                      <td className="px-4 py-3 text-ink-soft">
+                        {plan.min_people === plan.max_people ? plan.min_people : `${plan.min_people}-${plan.max_people}`} kişi
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="rounded-full bg-amber-soft px-2.5 py-0.5 text-xs font-bold">
+                          {plan.price.toLocaleString("tr-TR")}₺ · {priceUnitLabels[plan.unit]}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-ink-soft">{plan.note}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
 
@@ -119,7 +153,7 @@ export default async function MemberModuleDetailPage({
                   <input type="hidden" name="module_id" value={educationModule.id} />
                   <button
                     type="submit"
-                    className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
+                    className="min-h-11 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
                   >
                     Talep Oluştur
                   </button>
@@ -153,7 +187,7 @@ export default async function MemberModuleDetailPage({
             {openClasses.map((openClass) => {
               const remaining = Math.max(0, openClass.capacity - openClass.approved_count);
               return (
-                <div key={openClass.id} className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-line bg-white p-5 shadow-sm">
+                <div key={openClass.id} className="flex flex-col gap-4 rounded-xl border border-line bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-5">
                   <div>
                     <p className="font-display font-semibold">{openClass.title}</p>
                     <div className="mt-1.5 flex flex-wrap gap-3 text-xs text-ink-soft">
@@ -180,7 +214,7 @@ export default async function MemberModuleDetailPage({
                       <button
                         type="submit"
                         disabled={remaining === 0}
-                        className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50"
+                        className="min-h-11 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                       >
                         Katılım İsteği Gönder
                       </button>

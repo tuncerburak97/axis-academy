@@ -15,6 +15,7 @@ import {
 
 interface AdminNavProps {
   activeRequestCount: number;
+  onNavigate?: () => void;
 }
 
 interface NavItem {
@@ -36,7 +37,7 @@ function formatBadgeCount(count: number): string {
   return count > 99 ? "99+" : String(count);
 }
 
-export function AdminNav({ activeRequestCount }: AdminNavProps) {
+export function AdminNav({ activeRequestCount, onNavigate }: AdminNavProps) {
   const pathname = usePathname();
   const showRequestBadge = activeRequestCount > 0;
 
@@ -54,9 +55,10 @@ export function AdminNav({ activeRequestCount }: AdminNavProps) {
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             aria-current={isActive ? "page" : undefined}
             aria-label={ariaLabel}
-            className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
+            className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${
               isActive ? "bg-accent-soft text-accent" : "text-ink-soft hover:bg-surface hover:text-ink"
             }`}
           >

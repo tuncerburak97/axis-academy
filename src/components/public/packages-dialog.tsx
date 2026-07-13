@@ -34,7 +34,7 @@ export function PackagesDialog({ moduleTitle, bundles }: PackagesDialogProps) {
         ref={dialogRef}
         onClick={handleBackdropClick}
         aria-labelledby="packages-dialog-title"
-        className="m-auto w-full max-w-2xl rounded-2xl p-0 shadow-xl backdrop:bg-ink/40"
+        className="m-auto w-[calc(100%-2rem)] max-w-2xl rounded-2xl p-0 shadow-xl backdrop:bg-ink/40"
       >
         <div className="p-6 sm:p-8">
           <div className="flex items-start justify-between gap-4">
@@ -48,7 +48,7 @@ export function PackagesDialog({ moduleTitle, bundles }: PackagesDialogProps) {
               type="button"
               onClick={() => dialogRef.current?.close()}
               aria-label="Kapat"
-              className="rounded-lg p-2 text-ink-soft transition-colors hover:bg-surface hover:text-ink"
+              className="min-touch rounded-lg p-2 text-ink-soft transition-colors hover:bg-surface hover:text-ink"
             >
               <X className="size-5" aria-hidden />
             </button>

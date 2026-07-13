@@ -1,6 +1,6 @@
 // src/components/admin/fields.tsx — admin formları için ortak alan bileşenleri ve durum banner'ı
 const inputClass =
-  "mt-1 w-full rounded-lg border border-line bg-white px-3 py-2 text-sm transition-colors focus:border-accent";
+  "mt-1 w-full min-h-11 rounded-lg border border-line bg-white px-3 py-2.5 text-sm transition-colors focus:border-accent";
 
 interface BaseFieldProps {
   label: string;
@@ -56,8 +56,8 @@ export function SelectField({ label, name, defaultValue, options }: BaseFieldPro
 export function CheckboxField({ label, name, defaultChecked }: { label: string; name: string; defaultChecked?: boolean }) {
   const id = `field-${name}`;
   return (
-    <label htmlFor={id} className="flex items-center gap-2 text-sm font-medium">
-      <input id={id} name={name} type="checkbox" defaultChecked={defaultChecked} className="size-4 rounded border-line accent-[var(--color-accent)]" />
+    <label htmlFor={id} className="flex min-h-11 items-center gap-3 rounded-lg px-1 text-sm font-medium">
+      <input id={id} name={name} type="checkbox" defaultChecked={defaultChecked} className="size-5 shrink-0 rounded border-line accent-[var(--color-accent)]" />
       {label}
     </label>
   );
@@ -67,7 +67,7 @@ export function SubmitButton({ children }: { children: React.ReactNode }) {
   return (
     <button
       type="submit"
-      className="rounded-lg bg-accent px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
+      className="min-h-11 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong"
     >
       {children}
     </button>

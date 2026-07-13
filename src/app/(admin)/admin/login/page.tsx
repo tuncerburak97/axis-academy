@@ -24,7 +24,7 @@ export default async function AdminLoginPage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-20 sm:px-6">
+    <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-8 sm:px-6 sm:py-20">
       <p className="font-display text-lg font-bold tracking-tight">
         Axis<span className="text-accent"> Akademi</span>
       </p>

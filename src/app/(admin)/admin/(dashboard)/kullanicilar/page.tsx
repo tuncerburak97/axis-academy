@@ -1,4 +1,4 @@
-// src/app/(admin)/admin/(dashboard)/kullanicilar/page.tsx — kayıtlı kullanıcı listesi
+// src/app/(admin)/admin/(dashboard)/kullanicilar/page.tsx — kayıtlı kullanıcı listesi (mobil kart + desktop tablo)
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 
@@ -30,7 +30,49 @@ export default async function UserManagementPage() {
       <h1 className="font-display text-2xl font-bold tracking-tight">Kullanıcılar</h1>
       <p className="mt-1 text-sm text-ink-soft">{users.length} kayıtlı kullanıcı.</p>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-line bg-white shadow-sm">
+      {/* Mobil: kart görünümü */}
+      <div className="mt-6 space-y-3 md:hidden">
+        {users.map((user) => (
+          <article key={user.user_id} className="rounded-xl border border-line bg-white p-4 shadow-sm">
+            <div className="flex items-start justify-between gap-2">
+              <p className="font-medium">{user.full_name || "—"}</p>
+              {user.role === "admin" && (
+                <span className="shrink-0 rounded-full bg-ink px-2 py-0.5 text-[10px] font-bold text-white">ADMIN</span>
+              )}
+            </div>
+            <dl className="mt-3 space-y-1.5 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-soft">E-posta</dt>
+                <dd className="truncate text-right font-medium">{user.email}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-soft">Telefon</dt>
+                <dd>{user.phone || "—"}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-soft">Kayıt</dt>
+                <dd>{new Date(user.created_at).toLocaleDateString("tr-TR")}</dd>
+              </div>
+              <div className="flex justify-between gap-4 border-t border-line pt-2">
+                <dt className="text-ink-soft">Eğitim talebi</dt>
+                <dd className="font-semibold">{user.individual_requests[0]?.count ?? 0}</dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-ink-soft">Sınıf kaydı</dt>
+                <dd className="font-semibold">{user.class_enrollments[0]?.count ?? 0}</dd>
+              </div>
+            </dl>
+          </article>
+        ))}
+        {users.length === 0 && (
+          <p className="rounded-xl border border-dashed border-line bg-white p-8 text-center text-sm text-ink-soft">
+            Henüz kayıtlı kullanıcı yok.
+          </p>
+        )}
+      </div>
+
+      {/* Desktop: tablo görünümü */}
+      <div className="mt-6 hidden overflow-x-auto rounded-xl border border-line bg-white shadow-sm md:block">
         <table className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-soft">

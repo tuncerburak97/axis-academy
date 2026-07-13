@@ -12,7 +12,7 @@ export function AdminLoginForm() {
   const [state, formAction, isPending] = useActionState(adminLogin, initialState);
 
   return (
-    <div className="mt-8 rounded-xl border border-line bg-white p-6 shadow-sm">
+    <div className="mt-8 rounded-xl border border-line bg-white p-4 shadow-sm sm:p-6">
       <form action={formAction} className="space-y-4">
         <FormStatus error={state.error} />
         <FormField label="E-posta" name="email" type="email" autoComplete="email" />
@@ -20,7 +20,7 @@ export function AdminLoginForm() {
         <button
           type="submit"
           disabled={isPending}
-          className="w-full rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="min-h-11 w-full rounded-lg bg-ink px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isPending ? "Giriş yapılıyor…" : "Yönetici Girişi"}
         </button>

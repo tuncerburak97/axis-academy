@@ -7,7 +7,7 @@ interface AuthCardProps {
 
 export function AuthCard({ children }: AuthCardProps) {
   return (
-    <div className="mt-8 rounded-xl border border-line bg-white p-6 shadow-sm">
+    <div className="mt-8 rounded-xl border border-line bg-white p-4 shadow-sm sm:p-6">
       {children}
       <div className="my-5 flex items-center gap-3" aria-hidden>
         <span className="h-px flex-1 bg-line" />
@@ -17,7 +17,7 @@ export function AuthCard({ children }: AuthCardProps) {
       <form action={loginWithGoogle}>
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-line bg-white px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-surface"
+          className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-line bg-white px-4 py-2.5 text-sm font-semibold transition-colors hover:bg-surface"
         >
           {/* Google "G" işareti */}
           <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
@@ -55,7 +55,7 @@ export function FormField({ label, name, type, autoComplete, minLength }: FormFi
         required
         autoComplete={autoComplete}
         minLength={minLength}
-        className="mt-1.5 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm transition-colors focus:border-accent"
+        className="mt-1.5 min-h-11 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm transition-colors focus:border-accent"
       />
     </div>
   );

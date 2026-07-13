@@ -75,7 +75,7 @@ export function StatCounter({ value, suffix = "+", label }: StatCounterProps) {
 
   return (
     <div ref={ref} className="text-center">
-      <p className="font-display text-4xl font-bold text-accent md:text-5xl">
+      <p className="font-display text-3xl font-bold text-accent sm:text-4xl md:text-5xl">
         {display.toLocaleString("tr-TR")}
         {suffix}
       </p>

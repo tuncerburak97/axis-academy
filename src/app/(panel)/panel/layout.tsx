@@ -25,12 +25,14 @@ export default async function PanelLayout({ children }: { children: React.ReactN
           <Link href="/" className="font-display text-lg font-bold tracking-tight">
             Axis<span className="text-accent"> Akademi</span>
           </Link>
-          <div className="flex items-center gap-4">
-            <span className="hidden text-sm text-ink-soft sm:inline">{displayName}</span>
+          <div className="flex min-w-0 items-center gap-2 sm:gap-4">
+            <span className="max-w-[8rem] truncate text-xs text-ink-soft sm:max-w-none sm:text-sm">
+              {displayName}
+            </span>
             <form action={logout}>
               <button
                 type="submit"
-                className="rounded-lg border border-line px-4 py-2 text-sm font-semibold transition-colors hover:bg-surface"
+                className="min-h-11 rounded-lg border border-line px-3 py-2 text-sm font-semibold transition-colors hover:bg-surface sm:px-4"
               >
                 Çıkış Yap
               </button>
@@ -39,7 +41,7 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         </div>
         <PanelTabs />
       </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">{children}</main>
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10">{children}</main>
     </div>
   );
 }
