@@ -35,7 +35,7 @@ export default async function EducationPage() {
         items={[
           { icon: Layers, title: "Hazır paketler", subtitle: "Excel · Word · PowerPoint" },
           { icon: Users, title: "Sınıf eğitimleri", subtitle: "Açık kontenjanlar" },
-          { icon: CheckCircle2, title: "Kişiye özel modül", subtitle: "Üyelere özel fiyat matrisi" },
+          { icon: CheckCircle2, title: "Kişiye özel modül", subtitle: "Üyelere özel modül oluşturma" },
         ]}
       />
       <section className="mx-auto max-w-6xl px-3 py-16 sm:px-6">
@@ -90,12 +90,7 @@ export default async function EducationPage() {
                       )}
 
                       <div className="mt-auto pt-5">
-                        {mod.public_price_hint && (
-                          <p className="inline-flex rounded-full bg-amber-soft px-3 py-1 text-xs font-semibold">
-                            {mod.public_price_hint}
-                          </p>
-                        )}
-                        <p className="mt-3 flex items-center gap-1 text-sm font-semibold text-accent">
+                        <p className="flex items-center gap-1 text-sm font-semibold text-accent">
                           Detayları gör
                           <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
                         </p>
@@ -111,7 +106,7 @@ export default async function EducationPage() {
         <Reveal>
           <div className="mt-12 rounded-2xl bg-accent-soft p-8 text-center">
             <p className="font-display text-lg font-semibold">
-              Açık sınıflar, tüm fiyat seçenekleri ve kişiye özel modül oluşturma üyelere açıktır.
+              Açık sınıflar, paket müfredatları ve kişiye özel modül oluşturma üyelere açıktır.
             </p>
             <Link
               href="/kayit"

@@ -1,6 +1,14 @@
 // src/lib/queries/catalog.ts — eğitim kataloğu okuma sorguları (Server Component'lerden çağrılır)
 import { createClient } from "@/lib/supabase/server";
-import type { BundlePackage, BundleSyllabusWeek, BundleWithSyllabus, EducationModule, PricingPlan, SyllabusWeek } from "@/lib/types/catalog";
+import type {
+  BundlePackage,
+  BundleSyllabusWeek,
+  BundleWithSyllabus,
+  EducationModule,
+  PricingPlan,
+  PublicAllUpcomingClass,
+  SyllabusWeek,
+} from "@/lib/types/catalog";
 
 export async function getActiveModules(): Promise<EducationModule[]> {
   const supabase = await createClient();
@@ -37,11 +45,21 @@ export interface PublicUpcomingClass {
   id: string;
   title: string;
   start_date: string;
+  schedule_note: string;
   duration_hours: number;
   duration_weeks: number;
+  capacity: number;
+  approved_count: number;
 }
 
-// Public "yaklaşan eğitimler": kişisel veri içermeyen SECURITY DEFINER fonksiyonundan
+// Public ana sayfa: tüm aktif modüllerden yaklaşan açık sınıflar
+export async function getPublicAllUpcomingClasses(): Promise<PublicAllUpcomingClass[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_public_all_upcoming_classes");
+  return (data ?? []) as PublicAllUpcomingClass[];
+}
+
+// Public modül detay: kişisel veri içermeyen SECURITY DEFINER fonksiyonundan
 export async function getPublicUpcomingClasses(moduleId: string): Promise<PublicUpcomingClass[]> {
   const supabase = await createClient();
   const { data } = await supabase.rpc("get_public_upcoming_classes", { p_module_id: moduleId });

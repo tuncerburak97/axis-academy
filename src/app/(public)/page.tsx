@@ -1,5 +1,4 @@
-// src/app/(public)/page.tsx — anasayfa: görselli hero kompozisyonu, animasyonlu hizmet
-// kartları, nasıl çalışır adımları ve kayıt CTA bandı (hero metni site_content'ten)
+// src/app/(public)/page.tsx — anasayfa: yaklaşan eğitimler hero, değer önerisi, hizmet kartları
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -15,10 +14,13 @@ import {
   Clock,
 } from "lucide-react";
 import { getContent } from "@/lib/queries/content";
+import { getPublicAllUpcomingClasses } from "@/lib/queries/catalog";
 import { defaultHero, type HeroContent } from "@/lib/types/content";
 import { siteImages } from "@/lib/images";
 import { FadeUp, FloatingBadge, Reveal } from "@/components/public/motion-primitives";
 import { ProcessTimeline, StatBand, TrustStrip } from "@/components/public/marketing";
+import { PublicUpcomingClassesHero } from "@/components/public/public-upcoming-classes-hero";
+import { ValuePropositionSection } from "@/components/public/value-proposition-section";
 
 const services = [
   {
@@ -28,7 +30,6 @@ const services = [
     imageAlt: "Grafiklerle dolu analiz ekranı",
     title: "Analiz",
     description: "Bibliyometrik ve istatistiksel analizlerinizi uzman ekibimiz üstlenir; siz araştırmanıza odaklanın.",
-    priceHint: "Projeye özel teklif",
   },
   {
     href: "/egitim",
@@ -37,7 +38,6 @@ const services = [
     imageAlt: "Birlikte çalışan öğrenciler",
     title: "Eğitim",
     description: "Excel, Word ve PowerPoint'te hazır paketler, size özel modüller veya sınıf eğitimleriyle ustalaşın.",
-    priceHint: "800₺'den başlayan fiyatlarla",
   },
   {
     href: "/tez-duzenleme",
@@ -46,7 +46,6 @@ const services = [
     imageAlt: "Dolma kalemle yazılmış notlar",
     title: "Tez Düzenleme",
     description: "Teziniz biçim, kaynakça ve şablon kurallarına uygun, teslime hazır hâle getirilir.",
-    priceHint: "Projeye özel teklif",
   },
 ];
 
@@ -57,11 +56,13 @@ const steps = [
 ];
 
 export default async function HomePage() {
-  const hero = await getContent<HeroContent>("home", "hero", defaultHero);
+  const [hero, upcomingClasses] = await Promise.all([
+    getContent<HeroContent>("home", "hero", defaultHero),
+    getPublicAllUpcomingClasses(),
+  ]);
 
   return (
     <>
-      {/* Hero: solda metin, sağda yüzen rozetli görsel kompozisyonu */}
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--color-accent-soft),transparent_55%)]" aria-hidden />
         <div className="mx-auto grid max-w-6xl items-center gap-12 px-3 py-16 sm:px-6 md:grid-cols-2 md:py-24">
@@ -132,7 +133,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Hizmet kartları: görselli, hover'da yükselen */}
+      <PublicUpcomingClassesHero classes={upcomingClasses} />
+
+      <ValuePropositionSection />
+
       <section aria-labelledby="services-heading" className="bg-surface py-16 md:py-20">
         <div className="mx-auto max-w-6xl px-3 sm:px-6">
           <Reveal>
@@ -163,15 +167,10 @@ export default async function HomePage() {
                   <div className="flex flex-1 flex-col p-6">
                     <h3 className="font-display text-xl font-semibold">{service.title}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-ink-soft">{service.description}</p>
-                    <div className="mt-auto pt-4">
-                      <p className="inline-flex rounded-full bg-amber-soft px-3 py-1 text-xs font-semibold">
-                        {service.priceHint}
-                      </p>
-                      <p className="mt-3 flex items-center gap-1 text-sm font-semibold text-accent">
-                        Detayları gör
-                        <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
-                      </p>
-                    </div>
+                    <p className="mt-auto flex items-center gap-1 pt-4 text-sm font-semibold text-accent">
+                      Detayları gör
+                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
+                    </p>
                   </div>
                 </Link>
               </Reveal>
@@ -199,18 +198,16 @@ export default async function HomePage() {
         description="Kurumsal eğitim ve akademik destek alanında birikmiş deneyim."
       />
 
-      {/* Nasıl çalışır */}
       <ProcessTimeline steps={steps} title="Nasıl çalışır?" />
 
-      {/* Kayıt CTA bandı */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
         <Reveal>
           <div className="rounded-2xl bg-ink px-8 py-12 text-center text-white md:px-16">
             <h2 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
-              Aktif eğitimler ve detaylı fiyatlar üyelere açık
+              Açık sınıflar ve paket detayları üyelere açık
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-white/70">
-              Ücretsiz kayıt ol; açık sınıfları, paket fiyatlarını ve sana özel modül seçeneklerini panelinden gör.
+              Ücretsiz kayıt ol; yaklaşan eğitimleri, paket müfredatlarını ve sana özel modül seçeneklerini panelinden gör.
             </p>
             <Link
               href="/kayit"

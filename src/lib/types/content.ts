@@ -29,7 +29,7 @@ export interface FaqContent {
 export const defaultHero: HeroContent = {
   title: "Akademik işlerinizde net, profesyonel ve güvenilir destek",
   subtitle:
-    "İhtiyacınız analiz, ofis programları eğitimi ya da tez düzenleme olsun — süreci sadeleştirir, sonucu garantiye alırız. Fiyatlar şeffaf, iletişim doğrudan.",
+    "İhtiyacınız analiz, ofis programları eğitimi ya da tez düzenleme olsun — süreci sadeleştirir, sonucu garantiye alırız. Ücretsiz kayıt olun, detayları panelinizden takip edin.",
 };
 
 export const defaultAnalysisIntro: ServiceIntroContent = {
@@ -53,12 +53,12 @@ export const defaultFaq: FaqContent = {
   items: [
     {
       question: "Ödeme site üzerinden mi yapılıyor?",
-      answer: "Hayır. Fiyatlar sitede net olarak gösterilir; ödeme süreci ekibimizle doğrudan konuşulur.",
+      answer: "Hayır. Paket ve hizmet detayları üye panelinde görünür; ödeme süreci ekibimizle doğrudan konuşulur.",
     },
     {
       question: "Eğitim detaylarını neden göremiyorum?",
       answer:
-        "Açık sınıflar ve detaylı fiyat tabloları üyelere açıktır. Ücretsiz kayıt olduktan sonra tüm detayları panelinizden görebilirsiniz.",
+        "Açık sınıflar, paket müfredatları ve katılım seçenekleri üyelere açıktır. Ücretsiz kayıt olduktan sonra tüm detayları panelinizden görebilirsiniz.",
     },
     {
       question: "Analiz ve tez talepleri nasıl işliyor?",

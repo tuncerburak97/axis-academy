@@ -69,6 +69,20 @@ export interface MemberUpcomingClass extends OpenClass {
   module_category: ModuleCategory;
 }
 
+// Public ana sayfa hero: anonim ziyaretçi için tüm modüllerden yaklaşan sınıflar
+export interface PublicAllUpcomingClass {
+  id: string;
+  title: string;
+  start_date: string;
+  schedule_note: string;
+  duration_hours: number;
+  capacity: number;
+  approved_count: number;
+  module_id: string;
+  module_title: string;
+  module_category: ModuleCategory;
+}
+
 export type RequestStatus = "received" | "planned" | "in_progress" | "completed" | "cancelled";
 export type ContactStatus = "new" | "contacted" | "in_progress" | "completed";
 export type IndividualRequestType = "bundle" | "custom" | "schedule";

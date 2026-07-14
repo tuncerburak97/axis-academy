@@ -1,4 +1,4 @@
-// src/app/(public)/egitim/[id]/page.tsx — modül detayı: paket karşılaştırma, özellikler, fiyatlama
+// src/app/(public)/egitim/[id]/page.tsx — modül detayı: yaklaşan eğitimler, paket kartları, müfredat popup
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
@@ -8,7 +8,6 @@ import {
   ArrowRight,
   CalendarDays,
   CheckCircle2,
-  Layers,
   ListChecks,
   MousePointerClick,
   Package,
@@ -16,16 +15,23 @@ import {
   UserPlus,
 } from "lucide-react";
 import { getActiveBundlesWithSyllabus, getModuleById, getPublicUpcomingClasses } from "@/lib/queries/catalog";
-import { BundleComparisonSection } from "@/components/public/bundle-comparison-section";
+import { BundleCardsSection } from "@/components/public/bundle-cards-section";
+import { PublicUpcomingSection } from "@/components/public/public-upcoming-section";
 import { categoryLabels } from "@/lib/types/catalog";
 import { categoryImages } from "@/lib/images";
-import { PackagesDialog } from "@/components/public/packages-dialog";
 import { FadeUp, Reveal } from "@/components/public/motion-primitives";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
   const educationModule = await getModuleById(id);
   return { title: educationModule?.title ?? "Eğitim" };
+}
+
+function formatHourRange(bundles: { duration_hours: number }[]) {
+  if (bundles.length === 0) return "İhtiyaca göre";
+  const min = Math.min(...bundles.map((bundle) => bundle.duration_hours));
+  const max = Math.max(...bundles.map((bundle) => bundle.duration_hours));
+  return min === max ? `${min} saat` : `${min}–${max} saat`;
 }
 
 export default async function ModuleDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,16 +44,16 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
     getPublicUpcomingClasses(id),
   ]);
 
-  const hasBundleSyllabus = bundles.some((b) => b.weeks.length > 0);
-  const maxWeeks = Math.max(...bundles.map((b) => b.weeks.length), 0);
-  const minWeeks = bundles.filter((b) => b.weeks.length > 0).length > 0
-    ? Math.min(...bundles.filter((b) => b.weeks.length > 0).map((b) => b.weeks.length))
+  const hasBundleSyllabus = bundles.some((bundle) => bundle.weeks.length > 0);
+  const maxWeeks = Math.max(...bundles.map((bundle) => bundle.weeks.length), 0);
+  const minWeeks = bundles.filter((bundle) => bundle.weeks.length > 0).length > 0
+    ? Math.min(...bundles.filter((bundle) => bundle.weeks.length > 0).map((bundle) => bundle.weeks.length))
     : 0;
 
   return (
     <>
-      <section className="border-b border-line bg-surface">
-        <div className="mx-auto grid max-w-6xl items-center gap-10 px-3 py-16 sm:px-6 md:grid-cols-[3fr_2fr]">
+      <section className="bg-surface">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 px-3 py-16 pb-8 sm:px-6 md:grid-cols-[3fr_2fr]">
           <div>
             <Link href="/egitim" className="inline-flex items-center gap-1 text-sm font-semibold text-ink-soft hover:text-ink">
               <ArrowLeft className="size-4" aria-hidden /> Tüm Eğitimler
@@ -79,8 +85,9 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
         </div>
       </section>
 
-      {/* Özet veri şeridi: sayılarla programın kapsamı */}
-      <section aria-label="Program özeti" className="mx-auto max-w-6xl px-4 pt-10 sm:px-6">
+      <PublicUpcomingSection classes={upcomingClasses} moduleId={id} />
+
+      <section aria-label="Program özeti" className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <Reveal>
           <dl className="grid gap-4 rounded-2xl border border-line bg-white p-6 shadow-sm sm:grid-cols-3">
             <div className="flex items-center gap-3">
@@ -94,11 +101,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
               <span className="rounded-lg bg-accent-soft p-2.5 text-accent"><Timer className="size-5" aria-hidden /></span>
               <div>
                 <dt className="text-xs font-medium text-ink-soft">Program Süresi</dt>
-                <dd className="font-display text-xl font-bold">
-                  {bundles.length > 0
-                    ? `${Math.min(...bundles.map((bundle) => bundle.duration_hours))} saatten başlayan`
-                    : "İhtiyaca göre"}
-                </dd>
+                <dd className="font-display text-xl font-bold">{formatHourRange(bundles)}</dd>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -116,125 +119,56 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
         </Reveal>
       </section>
 
-      {hasBundleSyllabus && (
-        <BundleComparisonSection moduleTitle={educationModule.title} bundles={bundles} />
+      {bundles.length > 0 && (
+        <BundleCardsSection moduleTitle={educationModule.title} bundles={bundles} />
       )}
 
-      <section className="mx-auto grid max-w-6xl gap-12 px-3 py-16 sm:px-6 md:grid-cols-[2fr_1fr]">
-        <div>
-          {educationModule.long_description ? (
-            <div className="space-y-4 leading-relaxed text-ink-soft">
-              {educationModule.long_description.split("\n").filter(Boolean).map((paragraph, index) => (
-                <p key={index}>{paragraph}</p>
-              ))}
-            </div>
-          ) : (
-            <p className="text-ink-soft">Bu eğitimin detaylı açıklaması yakında eklenecek.</p>
-          )}
+      <section className="mx-auto max-w-3xl px-3 py-16 sm:px-6">
+        {educationModule.long_description ? (
+          <div className="space-y-4 leading-relaxed text-ink-soft">
+            {educationModule.long_description.split("\n").filter(Boolean).map((paragraph, index) => (
+              <p key={index}>{paragraph}</p>
+            ))}
+          </div>
+        ) : (
+          <p className="text-ink-soft">Bu eğitimin detaylı açıklaması yakında eklenecek.</p>
+        )}
 
-          {educationModule.features.length > 0 && (
-            <Reveal>
-              <h2 className="mt-10 font-display text-2xl font-bold tracking-tight">Bu eğitim neyi çözer?</h2>
-              <p className="mt-1 text-sm text-ink-soft">
-                Program sonunda somut olarak kazanacağın yetkinlikler:
-              </p>
-              <ul className="mt-5 grid gap-3 sm:grid-cols-2">
-                {educationModule.features.map((feature) => (
-                  <li
-                    key={feature}
-                    className="flex items-start gap-2.5 rounded-xl border border-line bg-white p-4 text-sm shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
-                  >
-                    <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" aria-hidden />
-                    <span className="leading-relaxed">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </Reveal>
-          )}
-        </div>
-
-        {/* Fiyatlama bölümü */}
-        <Reveal>
-        <aside aria-labelledby="pricing-heading" className="h-fit rounded-xl border border-line bg-white p-6 shadow-sm">
-          <h2 id="pricing-heading" className="font-display text-lg font-semibold">Fiyatlandırma</h2>
-          {educationModule.public_price_hint && (
-            <p className="mt-3 inline-flex rounded-full bg-amber-soft px-3 py-1.5 text-sm font-bold">
-              {educationModule.public_price_hint}
+        {educationModule.features.length > 0 && (
+          <Reveal>
+            <h2 className="mt-10 font-display text-2xl font-bold tracking-tight">Bu eğitim neyi çözer?</h2>
+            <p className="mt-1 text-sm text-ink-soft">
+              Program sonunda somut olarak kazanacağın yetkinlikler:
             </p>
-          )}
-          <p className="mt-4 text-sm leading-relaxed text-ink-soft">
-            Bireysel, grup ve sınıf seçeneklerine göre tüm fiyat planlarını üye panelinden görebilir,
-            sana uyan biçimde talep oluşturabilirsin.
-          </p>
-          <div className="mt-5 flex flex-col gap-3">
+            <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+              {educationModule.features.map((feature) => (
+                <li
+                  key={feature}
+                  className="flex items-start gap-2.5 rounded-xl border border-line bg-white p-4 text-sm shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
+                >
+                  <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-success" aria-hidden />
+                  <span className="leading-relaxed">{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+        )}
+
+        <Reveal>
+          <div className="mt-10 rounded-xl border border-line bg-white p-6 text-center shadow-sm">
+            <p className="text-sm text-ink-soft">
+              Paket detayları, açık sınıflar ve katılım seçenekleri üye panelinde.
+            </p>
             <Link
               href="/kayit"
-              className="inline-flex justify-center rounded-xl bg-accent px-6 py-3 font-semibold text-white transition-colors hover:bg-accent-strong"
+              className="mt-4 inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3 font-semibold text-white transition-colors hover:bg-accent-strong"
             >
-              Kayıt Ol, Fiyatları Gör
+              Ücretsiz Kayıt Ol <ArrowRight className="size-4" aria-hidden />
             </Link>
-            {hasBundleSyllabus ? (
-              <a
-                href="#paketleri-karsilastir"
-                className="inline-flex justify-center rounded-xl border border-accent px-6 py-3 font-semibold text-accent transition-colors hover:bg-accent-soft"
-              >
-                Paketleri Karşılaştır
-              </a>
-            ) : (
-              <PackagesDialog moduleTitle={educationModule.title} bundles={bundles} />
-            )}
           </div>
-        </aside>
         </Reveal>
       </section>
 
-      {/* Yaklaşan eğitimler: tarih bazlı, kayıt CTA'lı */}
-      {upcomingClasses.length > 0 && (
-        <section aria-labelledby="upcoming-heading" className="bg-surface py-16">
-          <div className="mx-auto max-w-6xl px-3 sm:px-6">
-            <Reveal>
-              <h2 id="upcoming-heading" className="font-display text-3xl font-bold tracking-tight">
-                Yaklaşan Eğitimler
-              </h2>
-              <p className="mt-2 max-w-lg text-ink-soft">
-                Takvimi belli, kontenjanlı programlar. Katılmak ya da detayları görmek için ücretsiz üye ol.
-              </p>
-            </Reveal>
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              {upcomingClasses.map((upcoming, index) => {
-                const startDate = new Date(upcoming.start_date);
-                return (
-                  <Reveal key={upcoming.id} delay={index * 0.1}>
-                    <div className="flex h-full items-start gap-4 rounded-2xl border border-line bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
-                      <div className="flex flex-col items-center rounded-xl bg-accent px-3.5 py-2.5 text-white">
-                        <span className="font-display text-2xl font-bold leading-none">{startDate.getDate()}</span>
-                        <span className="mt-1 text-[11px] font-semibold uppercase">
-                          {startDate.toLocaleDateString("tr-TR", { month: "short" })}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-display font-semibold leading-snug">{upcoming.title}</p>
-                        <div className="mt-2 flex flex-wrap gap-3 text-xs text-ink-soft">
-                          {upcoming.duration_weeks > 0 && (
-                            <span className="inline-flex items-center gap-1">
-                              <Layers className="size-3.5" aria-hidden /> {upcoming.duration_weeks} hafta
-                            </span>
-                          )}
-                          <span className="inline-flex items-center gap-1">
-                            <Timer className="size-3.5" aria-hidden /> {upcoming.duration_hours} saat
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Reveal>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Katılım akışı: 3 adım */}
       <section aria-labelledby="flow-heading" className="mx-auto max-w-6xl px-3 py-16 sm:px-6">
         <Reveal>
           <div className="rounded-2xl bg-ink px-8 py-12 text-white md:px-12">
@@ -248,7 +182,7 @@ export default async function ModuleDetailPage({ params }: { params: Promise<{ i
                 </span>
                 <p className="mt-3 font-display font-semibold">1. Ücretsiz üye ol</p>
                 <p className="mt-1.5 text-sm text-white/70">
-                  Tüm fiyat planlarını, paketleri ve açık sınıf detaylarını panelinden gör.
+                  Tüm paketleri, açık sınıf detaylarını ve katılım seçeneklerini panelinden gör.
                 </p>
               </li>
               <li className="text-center">
