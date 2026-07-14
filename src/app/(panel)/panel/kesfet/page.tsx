@@ -1,19 +1,26 @@
-// src/app/(panel)/panel/kesfet/page.tsx — Keşfet: aktif modül kartları
+// src/app/(panel)/panel/kesfet/page.tsx — Keşfet: yaklaşan eğitimler hero + aktif modül kartları
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { getActiveModules } from "@/lib/queries/catalog";
+import { getMemberUpcomingClasses } from "@/lib/queries/member";
+import { UpcomingClassesHero } from "@/components/panel/upcoming-classes-hero";
 import { categoryLabels } from "@/lib/types/catalog";
 
 export const metadata: Metadata = { title: "Keşfet" };
 export const dynamic = "force-dynamic";
 
 export default async function DiscoverPage() {
-  const modules = await getActiveModules();
+  const [upcomingClasses, modules] = await Promise.all([
+    getMemberUpcomingClasses(),
+    getActiveModules(),
+  ]);
 
   return (
     <>
-      <h1 className="font-display text-2xl font-bold tracking-tight">Keşfet</h1>
+      <UpcomingClassesHero classes={upcomingClasses} />
+
+      <h1 className="font-display text-2xl font-bold tracking-tight">Tüm Eğitim Modülleri</h1>
       <p className="mt-1 text-sm text-ink-soft">
         Bir modül seç; paketleri, fiyat planlarını ve açık sınıfları gör, sana uyan biçimde talep oluştur.
       </p>

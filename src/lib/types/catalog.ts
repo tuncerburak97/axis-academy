@@ -62,6 +62,13 @@ export interface OpenClass {
   my_status: EnrollmentStatus | null;
 }
 
+// Keşfet hero: modül bilgisiyle birlikte yaklaşan açık sınıf
+export interface MemberUpcomingClass extends OpenClass {
+  module_id: string;
+  module_title: string;
+  module_category: ModuleCategory;
+}
+
 export type RequestStatus = "received" | "planned" | "in_progress" | "completed" | "cancelled";
 export type ContactStatus = "new" | "contacted" | "in_progress" | "completed";
 export type IndividualRequestType = "bundle" | "custom" | "schedule";

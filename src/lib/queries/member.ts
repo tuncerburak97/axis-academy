@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import type {
   ContactStatus,
   EnrollmentStatus,
+  MemberUpcomingClass,
   OpenClass,
   PricingPlan,
   RequestStatus,
@@ -41,6 +42,13 @@ export async function getOpenClasses(moduleId: string): Promise<OpenClass[]> {
   const supabase = await createClient();
   const { data } = await supabase.rpc("get_open_classes", { p_module_id: moduleId });
   return (data ?? []) as OpenClass[];
+}
+
+// Keşfet hero: tüm aktif modüllerdeki yaklaşan açık sınıflar
+export async function getMemberUpcomingClasses(): Promise<MemberUpcomingClass[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("get_member_upcoming_classes");
+  return (data ?? []) as MemberUpcomingClass[];
 }
 
 export interface MyIndividualRequest {
