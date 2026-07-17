@@ -1,4 +1,4 @@
-// src/app/(public)/page.tsx — anasayfa: yaklaşan eğitimler hero, değer önerisi, hizmet kartları
+// src/app/(public)/page.tsx — anasayfa: hero (başlık + hizmet kartları), yaklaşan eğitimler, değer önerisi
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -65,70 +65,112 @@ export default async function HomePage() {
     <>
       <section className="relative overflow-hidden">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--color-accent-soft),transparent_55%)]" aria-hidden />
-        <div className="mx-auto grid max-w-6xl items-center gap-12 px-3 py-16 sm:px-6 md:grid-cols-2 md:py-24">
-          <div>
-            <FadeUp>
-              <p className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold tracking-wide text-accent">
-                <Sparkles className="size-3.5" aria-hidden /> Analiz · Eğitim · Tez Düzenleme
-              </p>
-            </FadeUp>
-            <FadeUp delay={0.1}>
-              <h1 className="mt-5 font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
-                {hero.title}
-              </h1>
-            </FadeUp>
-            <FadeUp delay={0.2}>
-              <p className="mt-5 max-w-xl text-lg text-ink-soft">{hero.subtitle}</p>
-            </FadeUp>
-            <FadeUp delay={0.3}>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href="/kayit"
-                  className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-md active:scale-[0.98] sm:px-6 sm:text-base"
-                >
-                  Hemen Kayıt Ol <ArrowRight className="size-4" aria-hidden />
-                </Link>
-                <Link
-                  href="/egitim"
-                  className="inline-flex items-center rounded-xl border border-line bg-white px-4 py-3 text-sm font-semibold text-ink transition-all hover:bg-surface active:scale-[0.98] sm:px-6 sm:text-base"
-                >
-                  Eğitimleri İncele
-                </Link>
-              </div>
-            </FadeUp>
+        <div className="mx-auto max-w-6xl px-3 py-16 sm:px-6 md:py-24">
+          <div className="grid items-center gap-12 md:grid-cols-2">
+            <div>
+              <FadeUp>
+                <p className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold tracking-wide text-accent">
+                  <Sparkles className="size-3.5" aria-hidden /> Analiz · Eğitim · Tez Düzenleme
+                </p>
+              </FadeUp>
+              <FadeUp delay={0.1}>
+                <h1 className="mt-5 font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
+                  {hero.title}
+                </h1>
+              </FadeUp>
+              <FadeUp delay={0.2}>
+                <p className="mt-5 max-w-xl text-lg text-ink-soft">{hero.subtitle}</p>
+              </FadeUp>
+              <FadeUp delay={0.3}>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <Link
+                    href="/kayit"
+                    className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-md active:scale-[0.98] sm:px-6 sm:text-base"
+                  >
+                    Hemen Kayıt Ol <ArrowRight className="size-4" aria-hidden />
+                  </Link>
+                  <Link
+                    href="/egitim"
+                    className="inline-flex items-center rounded-xl border border-line bg-white px-4 py-3 text-sm font-semibold text-ink transition-all hover:bg-surface active:scale-[0.98] sm:px-6 sm:text-base"
+                  >
+                    Eğitimleri İncele
+                  </Link>
+                </div>
+              </FadeUp>
+            </div>
+
+            <div className="relative hidden md:block">
+              <FadeUp delay={0.15}>
+                <div className="overflow-hidden rounded-3xl shadow-xl">
+                  <Image
+                    src={siteImages.hero}
+                    alt="Birlikte çalışan ve öğrenen bir ekip"
+                    width={700}
+                    height={500}
+                    priority
+                    className="h-[420px] w-full object-cover"
+                  />
+                </div>
+              </FadeUp>
+              <FloatingBadge delay={0.5} className="absolute -left-6 top-8">
+                <div className="flex items-center gap-2.5 rounded-xl bg-white px-4 py-3 shadow-lg">
+                  <span className="rounded-lg bg-accent-soft p-2 text-accent"><ShieldCheck className="size-5" aria-hidden /></span>
+                  <div className="text-sm">
+                    <p className="font-semibold leading-tight">Uzman ekip</p>
+                    <p className="text-xs text-ink-soft">Birebir takip</p>
+                  </div>
+                </div>
+              </FloatingBadge>
+              <FloatingBadge delay={0.7} className="absolute -bottom-5 right-8">
+                <div className="flex items-center gap-2.5 rounded-xl bg-white px-4 py-3 shadow-lg">
+                  <span className="rounded-lg bg-amber-soft p-2 text-amber"><Clock className="size-5" aria-hidden /></span>
+                  <div className="text-sm">
+                    <p className="font-semibold leading-tight">Esnek program</p>
+                    <p className="text-xs text-ink-soft">Sana uyan saatler</p>
+                  </div>
+                </div>
+              </FloatingBadge>
+            </div>
           </div>
 
-          <div className="relative hidden md:block">
-            <FadeUp delay={0.15}>
-              <div className="overflow-hidden rounded-3xl shadow-xl">
-                <Image
-                  src={siteImages.hero}
-                  alt="Birlikte çalışan ve öğrenen bir ekip"
-                  width={700}
-                  height={500}
-                  priority
-                  className="h-[420px] w-full object-cover"
-                />
-              </div>
-            </FadeUp>
-            <FloatingBadge delay={0.5} className="absolute -left-6 top-8">
-              <div className="flex items-center gap-2.5 rounded-xl bg-white px-4 py-3 shadow-lg">
-                <span className="rounded-lg bg-accent-soft p-2 text-accent"><ShieldCheck className="size-5" aria-hidden /></span>
-                <div className="text-sm">
-                  <p className="font-semibold leading-tight">Uzman ekip</p>
-                  <p className="text-xs text-ink-soft">Birebir takip</p>
-                </div>
-              </div>
-            </FloatingBadge>
-            <FloatingBadge delay={0.7} className="absolute -bottom-5 right-8">
-              <div className="flex items-center gap-2.5 rounded-xl bg-white px-4 py-3 shadow-lg">
-                <span className="rounded-lg bg-amber-soft p-2 text-amber"><Clock className="size-5" aria-hidden /></span>
-                <div className="text-sm">
-                  <p className="font-semibold leading-tight">Esnek program</p>
-                  <p className="text-xs text-ink-soft">Sana uyan saatler</p>
-                </div>
-              </div>
-            </FloatingBadge>
+          <div aria-labelledby="services-heading" className="mt-12 md:mt-16">
+            <Reveal>
+              <h2 id="services-heading" className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
+                Üç hizmet, tek çatı
+              </h2>
+              <p className="mt-2 max-w-lg text-ink-soft">Hangi aşamada olursanız olun, ihtiyacınıza uyan net bir çözüm var.</p>
+            </Reveal>
+            <div className="mt-8 grid gap-6 md:grid-cols-3">
+              {services.map((service, index) => (
+                <Reveal key={service.href} delay={index * 0.12}>
+                  <Link
+                    href={service.href}
+                    className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg active:scale-[0.99]"
+                  >
+                    <div className="relative h-40 overflow-hidden">
+                      <Image
+                        src={service.image}
+                        alt={service.imageAlt}
+                        width={600}
+                        height={320}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <span className="absolute bottom-3 left-4 inline-flex rounded-lg bg-white/95 p-2.5 text-accent shadow-sm">
+                        <service.icon className="size-5" aria-hidden />
+                      </span>
+                    </div>
+                    <div className="flex flex-1 flex-col p-6">
+                      <h3 className="font-display text-xl font-semibold">{service.title}</h3>
+                      <p className="mt-2 text-sm leading-relaxed text-ink-soft">{service.description}</p>
+                      <p className="mt-auto flex items-center gap-1 pt-4 text-sm font-semibold text-accent">
+                        Detayları gör
+                        <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
+                      </p>
+                    </div>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -136,48 +178,6 @@ export default async function HomePage() {
       <PublicUpcomingClassesHero classes={upcomingClasses} />
 
       <ValuePropositionSection />
-
-      <section aria-labelledby="services-heading" className="bg-surface py-16 md:py-20">
-        <div className="mx-auto max-w-6xl px-3 sm:px-6">
-          <Reveal>
-            <h2 id="services-heading" className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-              Üç hizmet, tek çatı
-            </h2>
-            <p className="mt-2 max-w-lg text-ink-soft">Hangi aşamada olursanız olun, ihtiyacınıza uyan net bir çözüm var.</p>
-          </Reveal>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
-            {services.map((service, index) => (
-              <Reveal key={service.href} delay={index * 0.12}>
-                <Link
-                  href={service.href}
-                  className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg active:scale-[0.99]"
-                >
-                  <div className="relative h-40 overflow-hidden">
-                    <Image
-                      src={service.image}
-                      alt={service.imageAlt}
-                      width={600}
-                      height={320}
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <span className="absolute bottom-3 left-4 inline-flex rounded-lg bg-white/95 p-2.5 text-accent shadow-sm">
-                      <service.icon className="size-5" aria-hidden />
-                    </span>
-                  </div>
-                  <div className="flex flex-1 flex-col p-6">
-                    <h3 className="font-display text-xl font-semibold">{service.title}</h3>
-                    <p className="mt-2 text-sm leading-relaxed text-ink-soft">{service.description}</p>
-                    <p className="mt-auto flex items-center gap-1 pt-4 text-sm font-semibold text-accent">
-                      Detayları gör
-                      <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
-                    </p>
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
 
       <TrustStrip
         items={[
