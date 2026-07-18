@@ -92,17 +92,20 @@ npm run check-types  # TypeScript kontrolü
 
 Uygulama `axisakademi.com` için containerize edilmiştir. Dışarıdan **5000** portu (HTTP); HTTPS harici nginx/Caddy ile sağlanır.
 
-### Kurulum
+### Kurulum (sunucu)
+
+Image CI tarafından Docker Hub'a basılır. Sunucuda:
 
 ```bash
-copy .env.production.example .env.production   # Windows
-# cp .env.production.example .env.production   # macOS/Linux
-# .env.production içindeki Supabase değerlerini doldur
+cp .env.production.example .env.production
+# .env.production değerlerini doldur
+# Bu dizinde güncel docker-compose.yml olmalı (/home/axis-academy)
 
-docker compose --env-file .env.production up -d --build
+docker pull tuncerburak/axis-academy:latest
+docker compose up -d
 ```
 
-Erişim: `http://localhost:5000`
+Erişim (sunucu içi): `http://127.0.0.1:5000` — public: `https://axisakademi.com`
 
 ### Supabase (deploy öncesi)
 
@@ -114,12 +117,48 @@ Authentication → URL Configuration:
 ### Diğer komutlar
 
 ```bash
-docker compose logs -f app      # loglar
-docker compose down             # durdur
-docker compose up -d --build    # yeniden build + başlat
+docker compose logs -f app
+docker compose down
+docker pull tuncerburak/axis-academy:latest && docker compose up -d
 ```
 
-### nginx (host tarafı)
+## CI/CD (GitHub Actions)
+
+Workflow: `.github/workflows/deploy.yml`
+
+- **Trigger:** `main` push veya Actions → *Build, Push, and Deploy* → Run workflow
+- **Akış:** Docker Hub build/push → SSH ile `/home/axis-academy` üzerinde pull + compose restart + smoke check
+
+### Gerekli GitHub Secrets
+
+| Secret | Açıklama |
+|---|---|
+| `DOCKERHUB_USERNAME` | Docker Hub kullanıcı adı |
+| `DOCKERHUB_TOKEN` | Docker Hub access token |
+| `NEXT_PUBLIC_SUPABASE_URL` | Build-time Supabase URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Build-time publishable key |
+| `SERVER_HOST` | Hetzner IP / hostname |
+| `SERVER_USER` | SSH kullanıcı |
+| `SERVER_SSH_KEY` | Deploy private key (PEM) |
+| `SERVER_SSH_PORT` | Opsiyonel; yoksa 22 |
+
+### Sunucu ilk kurulum (bir kerelik)
+
+1. `/home/axis-academy` oluştur; `docker-compose.yml` ve `.env.production` koy
+2. Deploy public key'i `authorized_keys` içine ekle; user Docker çalıştırabilsin
+3. Secret'ları GitHub repo Settings → Secrets and variables → Actions içine gir
+4. İlk deploy: workflow'u manuel tetikle veya `main`'e push et
+
+### Rollback
+
+```bash
+cd /home/axis-academy
+docker pull tuncerburak/axis-academy:<eski-short-sha>
+docker tag tuncerburak/axis-academy:<eski-short-sha> tuncerburak/axis-academy:latest
+docker compose up -d
+```
+
+## nginx (host tarafı)
 
 Tam config: `deploy/nginx/axisakademi.conf` — sunucuya kopyalayıp aşağıdaki adımları izleyin.
 

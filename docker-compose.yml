@@ -1,12 +1,8 @@
 # docker-compose.yml — Axis Akademi production (HTTP 5000 → container 3000)
+# Image is built/pushed by GitHub Actions; server pulls from Docker Hub.
 services:
   app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+    image: tuncerburak/axis-academy:latest
     env_file: .env.production
     ports:
       - "5000:3000"
