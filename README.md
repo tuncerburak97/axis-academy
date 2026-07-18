@@ -1,7 +1,6 @@
 # Axis Akademi
 
 Analiz, Eğitim (Excel/Word/PowerPoint) ve Tez Düzenleme hizmetleri için Next.js 15 + Supabase web uygulaması.
-
 ## Kurulum
 
 ```bash
