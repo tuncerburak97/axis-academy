@@ -158,7 +158,7 @@ docker tag tuncerburak/axis-academy:<eski-short-sha> tuncerburak/axis-academy:la
 docker compose up -d
 ```
 
-### nginx (host tarafı)
+## nginx (host tarafı)
 
 Tam config: `deploy/nginx/axisakademi.conf` — sunucuya kopyalayıp aşağıdaki adımları izleyin.
 
