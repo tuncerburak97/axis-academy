@@ -17,7 +17,7 @@ export async function getActiveModules(): Promise<EducationModule[]> {
     .select("*")
     .eq("is_active", true)
     .order("sort_order");
-  return data ?? [];
+  return (data ?? []) as EducationModule[];
 }
 
 export async function getModuleById(id: string): Promise<EducationModule | null> {
@@ -27,7 +27,7 @@ export async function getModuleById(id: string): Promise<EducationModule | null>
     .select("*")
     .eq("id", id)
     .maybeSingle();
-  return data;
+  return data as EducationModule | null;
 }
 
 export async function getActiveBundles(moduleId: string): Promise<BundlePackage[]> {
@@ -70,7 +70,7 @@ export async function getPublicUpcomingClasses(moduleId: string): Promise<Public
 export async function getAllModules(): Promise<EducationModule[]> {
   const supabase = await createClient();
   const { data } = await supabase.from("education_modules").select("*").order("sort_order");
-  return data ?? [];
+  return (data ?? []) as EducationModule[];
 }
 
 export async function getModulePlans(moduleId: string): Promise<PricingPlan[]> {
@@ -80,7 +80,7 @@ export async function getModulePlans(moduleId: string): Promise<PricingPlan[]> {
     .select("*")
     .eq("module_id", moduleId)
     .order("sort_order");
-  return data ?? [];
+  return (data ?? []) as PricingPlan[];
 }
 
 export async function getModuleBundles(moduleId: string): Promise<BundlePackage[]> {
@@ -110,7 +110,7 @@ export async function getBundleSyllabus(bundleId: string): Promise<BundleSyllabu
     .select("*")
     .eq("bundle_id", bundleId)
     .order("week_number");
-  return data ?? [];
+  return (data ?? []) as BundleSyllabusWeek[];
 }
 
 export async function getModuleBundleSyllabi(moduleId: string): Promise<Record<string, BundleSyllabusWeek[]>> {
@@ -126,7 +126,7 @@ export async function getModuleBundleSyllabi(moduleId: string): Promise<Record<s
 
   const map: Record<string, BundleSyllabusWeek[]> = {};
   for (const bundle of bundles) map[bundle.id] = [];
-  for (const week of data ?? []) {
+  for (const week of (data ?? []) as BundleSyllabusWeek[]) {
     if (!map[week.bundle_id]) map[week.bundle_id] = [];
     map[week.bundle_id].push(week);
   }
@@ -145,7 +145,7 @@ export async function getActiveBundlesWithSyllabus(moduleId: string): Promise<Bu
     .order("week_number");
 
   const weeksByBundle = new Map<string, BundleSyllabusWeek[]>();
-  for (const week of data ?? []) {
+  for (const week of (data ?? []) as BundleSyllabusWeek[]) {
     const list = weeksByBundle.get(week.bundle_id) ?? [];
     list.push(week);
     weeksByBundle.set(week.bundle_id, list);

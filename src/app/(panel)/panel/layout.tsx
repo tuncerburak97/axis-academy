@@ -1,47 +1,38 @@
-// src/app/(panel)/panel/layout.tsx — üye paneli koruması: giriş yoksa /giris'e yönlendirir
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { logout } from "@/lib/actions/auth";
-import { PanelTabs } from "@/components/panel/panel-tabs";
+// src/app/(panel)/panel/layout.tsx — üye alanı kabuğu: giriş koruması, kenar çubuğu, üst çubuk, mobil alt sekmeler
+import type { Metadata } from "next";
+import { requireUser } from "@/lib/auth";
+import { getMyNotifications, getMyUnreadCount } from "@/lib/queries/notifications";
+import { getMyAwaitingRequestCount } from "@/lib/queries/member";
+import { MobileTabbar, PanelSidebar } from "@/components/panel/panel-nav";
+import { PanelTopbar } from "@/components/panel/panel-topbar";
+
+export const metadata: Metadata = {
+  title: { default: "Üye alanı", template: "%s · Üye alanı | Axis Akademi" },
+  robots: { index: false, follow: false },
+};
 
 export default async function PanelLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/giris");
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("full_name")
-    .eq("user_id", user.id)
-    .single();
-
-  const displayName = profile?.full_name || user.email;
+  const user = await requireUser("/panel");
+  const [notifications, unreadCount, awaitingCount] = await Promise.all([
+    getMyNotifications(8),
+    getMyUnreadCount(),
+    getMyAwaitingRequestCount(user.id),
+  ]);
+  const nav = { role: user.role, awaitingCount, unreadCount };
 
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="border-b border-line bg-white">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-3 sm:px-6">
-          <Link href="/" className="shrink-0 font-display text-base font-bold tracking-tight sm:text-lg">
-            Axis<span className="text-accent"> Akademi</span>
-          </Link>
-          <div className="flex min-w-0 items-center gap-1.5 sm:gap-4">
-            <span className="max-w-[5.5rem] truncate text-xs text-ink-soft sm:max-w-none sm:text-sm">
-              {displayName}
-            </span>
-            <form action={logout}>
-              <button
-                type="submit"
-                className="min-h-11 rounded-lg border border-line px-3 py-2 text-sm font-semibold transition-colors hover:bg-surface sm:px-4"
-              >
-                Çıkış Yap
-              </button>
-            </form>
-          </div>
-        </div>
-        <PanelTabs />
-      </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-3 py-8 sm:px-6 sm:py-10">{children}</main>
+    <div className="min-h-dvh bg-canvas text-ink print:bg-white">
+      <PanelSidebar {...nav} />
+      <div className="flex min-h-dvh flex-col lg:pl-64 print:pl-0">
+        <PanelTopbar displayName={user.displayName} email={user.email} notifications={notifications} unreadCount={unreadCount} />
+        <main
+          id="icerik"
+          className="mx-auto w-full max-w-6xl flex-1 px-4 pb-[calc(6.5rem+env(safe-area-inset-bottom))] pt-5 sm:px-6 lg:px-10 lg:pb-16 lg:pt-2 print:max-w-none print:p-0"
+        >
+          {children}
+        </main>
+      </div>
+      <MobileTabbar {...nav} />
     </div>
   );
 }

@@ -1,252 +1,364 @@
-// src/lib/actions/member.ts — üye talepleri ve profil güncelleme Server Action'ları
-// Fiyat her zaman sunucuda yeniden hesaplanır; istemciden gelen tutara güvenilmez.
+// src/lib/actions/member.ts — üye alanı sunucu aksiyonları (useActionState + toast ile kullanılır)
+// Uygulama içi bildirimler DB tetikleyicileriyle oluşur; burada yalnızca ekibe e-posta gider.
 "use server";
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient, hasAdminServiceKey } from "@/lib/supabase/admin";
+import { getSessionUser } from "@/lib/auth";
 import { sendAdminNotification } from "@/lib/email";
-import type { AuthFormState } from "@/lib/types";
+import { formatTRY } from "@/lib/format";
+import { requestKindLabels, type RequestKind } from "@/lib/types/platform";
+import { fail, ok, type ActionState } from "@/lib/queries/member-types";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_REQUEST_FILE_SIZE = 20 * 1024 * 1024;
+const uuid = z.string().uuid("Geçersiz kayıt.");
 
-async function requireUser() {
+async function currentUser() {
+  const user = await getSessionUser();
+  return user;
+}
+
+const SESSION_EXPIRED = "Oturumun kapanmış. Sayfayı yenileyip tekrar giriş yap.";
+
+function revalidatePanel(...paths: string[]) {
+  revalidatePath("/panel", "layout");
+  for (const path of paths) revalidatePath(path);
+}
+
+// ------------------------------------------------------------
+// Dönem başvurusu
+// ------------------------------------------------------------
+export async function cancelEnrollmentAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  const id = uuid.safeParse(formData.get("enrollment_id"));
+  if (!id.success) return fail("Başvuru bulunamadı.");
+
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/giris");
-  return { supabase, user };
-}
-
-// Hazır paket talebi: fiyat pakete ait fixed_price'tan alınır
-export async function createBundleRequest(formData: FormData): Promise<void> {
-  const { supabase, user } = await requireUser();
-  const bundleId = String(formData.get("bundle_id"));
-  const moduleId = String(formData.get("module_id"));
-
-  const { data: bundle } = await supabase
-    .from("bundle_packages")
-    .select("*")
-    .eq("id", bundleId)
-    .eq("is_active", true)
+  const { data: enrollment } = await supabase
+    .from("class_enrollments")
+    .select("id, class_id, status, classes(title)")
+    .eq("id", id.data)
+    .eq("user_id", user.id)
     .maybeSingle();
-  if (!bundle) redirect(`/panel/kesfet/${moduleId}?error=db`);
+  if (!enrollment) return fail("Başvuru bulunamadı.");
 
-  const { error } = await supabase.from("individual_requests").insert({
-    user_id: user.id,
-    request_type: "bundle",
-    module_id: bundle.module_id,
-    bundle_id: bundle.id,
-    total_hours: bundle.duration_hours,
-    calculated_price: bundle.fixed_price,
-  });
-  if (error) redirect(`/panel/kesfet/${moduleId}?error=db`);
+  const { error } = await supabase.rpc("cancel_my_enrollment", { p_enrollment_id: id.data });
+  if (error) {
+    return fail(
+      error.message.includes("NOT_CANCELLABLE")
+        ? "Bu kayıt artık geri çekilemiyor. Değişiklik için ekiple iletişime geç."
+        : "Başvuru geri çekilemedi. Biraz sonra tekrar dene.",
+    );
+  }
 
-  await sendAdminNotification("Yeni paket eğitim talebi", [
-    `Kullanıcı: ${user.email}`,
-    `Paket: ${bundle.title}`,
-    `Tutar: ${bundle.fixed_price}₺`,
-  ]);
-
-  revalidatePath("/panel");
-  redirect("/panel?saved=1");
+  const cohortTitle = (enrollment.classes as { title: string } | null)?.title ?? "Dönem";
+  await sendAdminNotification("Başvuru geri çekildi", [`${user.displayName} (${user.email})`, `${cohortTitle} başvurusunu geri çekti.`], `/admin/donemler/${enrollment.class_id}`);
+  revalidatePanel("/panel/egitimler", `/panel/egitimler/${enrollment.class_id}`);
+  return ok("Başvurun geri çekildi.");
 }
 
-const customRequestSchema = z.object({
-  module_id: z.string().uuid(),
-  topic_ids: z.array(z.string().uuid()).min(1, "En az bir konu seçmelisin."),
-  total_hours: z.coerce.number().int().min(1, "Toplam saat en az 1 olmalı.").max(500, "Toplam saat çok yüksek."),
-});
+// ------------------------------------------------------------
+// Talepler
+// ------------------------------------------------------------
+export async function respondToQuoteAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  const id = uuid.safeParse(formData.get("request_id"));
+  if (!id.success) return fail("Talep bulunamadı.");
+  const accept = formData.get("decision") === "accept";
 
-// Özel modül talebi: canlı fiyat yalnız gösterim içindir; burada yeniden hesaplanır
-export async function createCustomRequest(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const { supabase, user } = await requireUser();
-
-  const parsed = customRequestSchema.safeParse({
-    module_id: formData.get("module_id"),
-    topic_ids: formData.getAll("topic_ids").map(String),
-    total_hours: formData.get("total_hours"),
-  });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
-  }
-
-  const { data: plan } = await supabase
-    .from("pricing_plans")
-    .select("price")
-    .eq("module_id", parsed.data.module_id)
-    .eq("training_type", "individual")
-    .eq("unit", "per_hour")
-    .eq("is_active", true)
-    .order("sort_order")
-    .limit(1)
-    .maybeSingle();
-  if (!plan) {
-    return { error: "Bu modül için bireysel fiyatlandırma henüz tanımlanmamış. Lütfen bizimle iletişime geçin." };
-  }
-
-  const { error } = await supabase.from("individual_requests").insert({
-    user_id: user.id,
-    request_type: "custom",
-    module_id: parsed.data.module_id,
-    topic_ids: parsed.data.topic_ids,
-    total_hours: parsed.data.total_hours,
-    calculated_price: plan.price * parsed.data.total_hours,
-  });
-  if (error) {
-    return { error: "Talep oluşturulamadı. Lütfen tekrar deneyin." };
-  }
-
-  await sendAdminNotification("Yeni özel modül talebi", [
-    `Kullanıcı: ${user.email}`,
-    `Konu sayısı: ${parsed.data.topic_ids.length}`,
-    `Toplam saat: ${parsed.data.total_hours}`,
-    `Tutar: ${plan.price * parsed.data.total_hours}₺`,
-  ]);
-
-  revalidatePath("/panel");
-  redirect("/panel?saved=1");
-}
-
-// Sınıfa katılım isteği: pending oluşturur, admin onayı bekler
-export async function requestEnrollment(formData: FormData): Promise<void> {
-  const { supabase, user } = await requireUser();
-  const classId = String(formData.get("class_id"));
-  const moduleId = String(formData.get("module_id"));
-
-  const { error } = await supabase.rpc("request_class_enrollment", { p_class_id: classId });
-  if (error) {
-    const reason = error.message.includes("ALREADY_REQUESTED")
-      ? "already"
-      : error.message.includes("CLASS_NOT_OPEN")
-        ? "notopen"
-        : "db";
-    redirect(`/panel/kesfet/${moduleId}?error=${reason}`);
-  }
-
-  await sendAdminNotification("Yeni sınıf katılım isteği", [
-    `Kullanıcı: ${user.email}`,
-    "Onay bekleyen katılım isteği var; admin panelinden Sınıflar ekranını kontrol edin.",
-  ]);
-
-  revalidatePath("/panel");
-  redirect("/panel?saved=1");
-}
-
-const scheduleRequestSchema = z.object({
-  module_id: z.string().uuid(),
-  user_message: z.string().min(10, "Mesaj en az 10 karakter olmalı.").max(2000),
-});
-
-// Tarih talebi: uygun sınıf tarihi olmayan kullanıcı mesajla talep açar (admin manuel işler)
-export async function createScheduleRequest(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const { supabase, user } = await requireUser();
-
-  const parsed = scheduleRequestSchema.safeParse({
-    module_id: formData.get("module_id"),
-    user_message: formData.get("user_message"),
-  });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
-  }
-
-  const { error } = await supabase.from("individual_requests").insert({
-    user_id: user.id,
-    request_type: "schedule",
-    module_id: parsed.data.module_id,
-    calculated_price: 0,
-    user_message: parsed.data.user_message,
-  });
-  if (error) {
-    return { error: "Talep oluşturulamadı. Lütfen tekrar deneyin." };
-  }
-
-  await sendAdminNotification("Yeni eğitim tarihi talebi", [
-    `Kullanıcı: ${user.email}`,
-    `Mesaj: ${parsed.data.user_message}`,
-  ]);
-
-  revalidatePath("/panel");
-  redirect("/panel/talepler?saved=1");
-}
-
-const contactRequestSchema = z.object({
-  service_type: z.enum(["analysis", "thesis"]),
-  message: z.string().min(10, "Mesaj en az 10 karakter olmalı.").max(5000),
-});
-
-// Analiz / Tez talebi: isteğe bağlı dosya private bucket'a yüklenir
-export async function createContactRequest(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const { supabase, user } = await requireUser();
-
-  const parsed = contactRequestSchema.safeParse({
-    service_type: formData.get("service_type"),
-    message: formData.get("message"),
-  });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
-  }
-
-  let filePath: string | null = null;
-  const file = formData.get("file");
-  if (file instanceof File && file.size > 0) {
-    if (file.size > MAX_FILE_SIZE) {
-      return { error: "Dosya 10MB'tan büyük olamaz." };
-    }
-    filePath = `${user.id}/${crypto.randomUUID()}-${file.name}`;
-    const { error: uploadError } = await supabase.storage.from("request-files").upload(filePath, file);
-    if (uploadError) {
-      return { error: "Dosya yüklenemedi. Lütfen tekrar deneyin." };
-    }
-  }
-
-  const { error } = await supabase.from("contact_requests").insert({
-    user_id: user.id,
-    service_type: parsed.data.service_type,
-    message: parsed.data.message,
-    file_path: filePath,
-  });
-  if (error) {
-    return { error: "Talep oluşturulamadı. Lütfen tekrar deneyin." };
+  const supabase = await createClient();
+  const { data: request, error } = await supabase.rpc("respond_to_quote", { p_request_id: id.data, p_accept: accept });
+  if (error || !request) {
+    return fail(
+      error?.message.includes("QUOTE_NOT_PENDING")
+        ? "Bu teklif artık yanıt beklemiyor. Sayfayı yenileyip güncel durumu kontrol et."
+        : "Yanıtın kaydedilemedi. Biraz sonra tekrar dene.",
+    );
   }
 
   await sendAdminNotification(
-    `Yeni ${parsed.data.service_type === "analysis" ? "analiz" : "tez düzenleme"} talebi`,
+    accept ? "Teklif onaylandı" : "Teklif reddedildi",
     [
-      `Kullanıcı: ${user.email}`,
-      `Mesaj: ${parsed.data.message}`,
-      filePath ? "Ekli dosya var (admin panelinden indirilebilir)." : "Ekli dosya yok.",
-    ],
+      `${user.displayName} (${user.email})`,
+      `Talep: ${request.title || requestKindLabels[request.kind as RequestKind]}`,
+      request.quote_amount ? `Teklif tutarı: ${formatTRY(request.quote_amount)}` : "",
+      accept ? "Süreci planlamak için talebi aç." : "Kullanıcı teklifi reddetti; talep iptal edildi.",
+    ].filter(Boolean),
+    `/admin/talepler/${id.data}`,
   );
-
-  revalidatePath("/panel/talepler");
-  redirect("/panel/talepler?saved=1");
+  revalidatePanel("/panel/talepler", `/panel/talepler/${id.data}`);
+  return ok(accept ? "Teklifi onayladın. Ekibimiz planlamaya başlıyor." : "Teklifi reddettin; talep kapatıldı.");
 }
 
-const profileSchema = z.object({
-  full_name: z.string().min(2, "Ad soyad en az 2 karakter olmalı.").max(100),
-  phone: z.string().max(20, "Telefon numarası çok uzun."),
+export async function cancelRequestAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  const id = uuid.safeParse(formData.get("request_id"));
+  if (!id.success) return fail("Talep bulunamadı.");
+
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancel_my_request", { p_request_id: id.data });
+  if (error) {
+    return fail(
+      error.message.includes("NOT_CANCELLABLE")
+        ? "Bu talep işleme alındığı için buradan iptal edilemiyor. Mesaj yazarak ekiple konuş."
+        : "Talep iptal edilemedi. Biraz sonra tekrar dene.",
+    );
+  }
+  await sendAdminNotification("Talep iptal edildi", [`${user.displayName} (${user.email}) talebini iptal etti.`], `/admin/talepler/${id.data}`);
+  revalidatePanel("/panel/talepler", `/panel/talepler/${id.data}`);
+  return ok("Talebin iptal edildi.");
+}
+
+const messageSchema = z.object({
+  request_id: uuid,
+  body: z.string().trim().min(1, "Mesaj boş olamaz.").max(5000, "Mesaj en fazla 5000 karakter olabilir."),
 });
 
-export async function updateProfile(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
-  const { supabase, user } = await requireUser();
+export async function sendRequestMessageAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  const parsed = messageSchema.safeParse({ request_id: formData.get("request_id"), body: formData.get("body") });
+  if (!parsed.success) return fail(parsed.error.issues[0].message, { body: parsed.error.issues[0].message });
 
-  const parsed = profileSchema.safeParse({
-    full_name: formData.get("full_name"),
-    phone: formData.get("phone") ?? "",
+  const supabase = await createClient();
+  const { data: request } = await supabase
+    .from("requests")
+    .select("id, title, kind, status")
+    .eq("id", parsed.data.request_id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!request) return fail("Talep bulunamadı.");
+  if (request.status === "cancelled") return fail("İptal edilen talebe mesaj gönderilemez. Yeni bir talep oluşturabilirsin.");
+
+  const { error } = await supabase.from("request_messages").insert({
+    request_id: request.id,
+    author_id: user.id,
+    is_staff: false,
+    body: parsed.data.body,
   });
-  if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
+  if (error) return fail("Mesajın gönderilemedi. Biraz sonra tekrar dene.");
+
+  await sendAdminNotification(
+    `Yeni mesaj: ${request.title || requestKindLabels[request.kind as RequestKind]}`,
+    [`${user.displayName} (${user.email}) yazdı:`, parsed.data.body.slice(0, 1000)],
+    `/admin/talepler/${request.id}`,
+  );
+  revalidatePath(`/panel/talepler/${request.id}`);
+  return ok("Mesajın gönderildi.");
+}
+
+function safeFileName(name: string): string {
+  const cleaned = name
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/ı/g, "i")
+    .replace(/[^\w.\-() ]+/g, "_")
+    .replace(/\s+/g, "_")
+    .slice(-120);
+  return cleaned || "dosya";
+}
+
+export async function uploadRequestFilesAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  const id = uuid.safeParse(formData.get("request_id"));
+  if (!id.success) return fail("Talep bulunamadı.");
+  const files = formData.getAll("files").filter((entry): entry is File => entry instanceof File && entry.size > 0);
+  if (!files.length) return fail("Yüklemek için en az bir dosya seç.");
+  const tooLarge = files.find((file) => file.size > MAX_REQUEST_FILE_SIZE);
+  if (tooLarge) return fail(`"${tooLarge.name}" 20 MB'tan büyük. Dosyayı sıkıştırıp ya da bölüp tekrar dene.`);
+
+  const supabase = await createClient();
+  const { data: request } = await supabase.from("requests").select("id, title, status").eq("id", id.data).eq("user_id", user.id).maybeSingle();
+  if (!request) return fail("Talep bulunamadı.");
+  if (request.status === "cancelled") return fail("İptal edilen talebe dosya eklenemez.");
+
+  let uploaded = 0;
+  for (const file of files) {
+    const path = `${user.id}/${request.id}/${Date.now().toString(36)}-${safeFileName(file.name)}`;
+    const { error: uploadError } = await supabase.storage.from("request-files").upload(path, file, {
+      contentType: file.type || "application/octet-stream",
+      upsert: false,
+    });
+    if (uploadError) {
+      if (uploaded) revalidatePath(`/panel/talepler/${request.id}`);
+      return fail(`"${file.name}" yüklenemedi. Bağlantını kontrol edip tekrar dene.`);
+    }
+    const { error } = await supabase.from("request_files").insert({
+      request_id: request.id,
+      uploaded_by: user.id,
+      file_path: path,
+      file_name: file.name.slice(0, 200),
+      file_size: file.size,
+    });
+    if (error) {
+      await supabase.storage.from("request-files").remove([path]);
+      return fail(`"${file.name}" kaydedilemedi. Tekrar dene.`);
+    }
+    uploaded += 1;
   }
 
+  await sendAdminNotification(
+    `Yeni dosya: ${request.title || "Talep"}`,
+    [`${user.displayName} (${user.email}) ${uploaded} dosya ekledi.`, ...files.map((file) => `• ${file.name}`)],
+    `/admin/talepler/${request.id}`,
+  );
+  revalidatePath(`/panel/talepler/${request.id}`);
+  return ok(uploaded === 1 ? "Dosyan yüklendi." : `${uploaded} dosya yüklendi.`);
+}
+
+// ------------------------------------------------------------
+// Değerlendirme
+// ------------------------------------------------------------
+const reviewSchema = z.object({
+  target: z.enum(["class", "request"]),
+  target_id: uuid,
+  rating: z.coerce.number().int().min(1, "Puan seç (1–5).").max(5, "Puan seç (1–5)."),
+  comment: z.string().trim().max(2000, "Yorum en fazla 2000 karakter olabilir."),
+});
+
+export async function submitReviewAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  const parsed = reviewSchema.safeParse({
+    target: formData.get("target"),
+    target_id: formData.get("target_id"),
+    rating: formData.get("rating") ?? 0,
+    comment: formData.get("comment") ?? "",
+  });
+  if (!parsed.success) return fail(parsed.error.issues[0].message);
+
+  const supabase = await createClient();
+  let moduleId: string | null = null;
+  let path: string;
+  if (parsed.data.target === "class") {
+    const { data } = await supabase.from("classes").select("module_id").eq("id", parsed.data.target_id).maybeSingle();
+    moduleId = data?.module_id ?? null;
+    path = `/panel/egitimler/${parsed.data.target_id}`;
+  } else {
+    const { data } = await supabase.from("requests").select("module_id").eq("id", parsed.data.target_id).eq("user_id", user.id).maybeSingle();
+    if (!data) return fail("Talep bulunamadı.");
+    moduleId = data.module_id;
+    path = `/panel/talepler/${parsed.data.target_id}`;
+  }
+
+  const { error } = await supabase.from("reviews").insert({
+    user_id: user.id,
+    module_id: moduleId,
+    class_id: parsed.data.target === "class" ? parsed.data.target_id : null,
+    request_id: parsed.data.target === "request" ? parsed.data.target_id : null,
+    rating: parsed.data.rating,
+    comment: parsed.data.comment,
+  });
+  if (error) {
+    return fail(
+      error.code === "23505"
+        ? "Bu eğitim için zaten değerlendirme gönderdin."
+        : "Değerlendirmen kaydedilemedi. Eğitim başladıktan sonra tekrar dene.",
+    );
+  }
+  await sendAdminNotification("Yeni değerlendirme", [`${user.displayName}: ${parsed.data.rating}/5`, parsed.data.comment || "(yorumsuz)"], "/admin/yorumlar");
+  revalidatePath(path);
+  return ok("Teşekkürler! Yorumun onaylandıktan sonra yayınlanır.");
+}
+
+// ------------------------------------------------------------
+// Hesap
+// ------------------------------------------------------------
+const profileSchema = z.object({
+  full_name: z.string().trim().min(2, "Ad soyad en az 2 karakter olmalı.").max(100, "Ad soyad en fazla 100 karakter olabilir."),
+  phone: z
+    .string()
+    .trim()
+    .max(20, "Telefon numarası en fazla 20 karakter olabilir.")
+    .regex(/^[0-9+()\s-]*$/, "Telefon numarasında yalnızca rakam, boşluk ve + ( ) - kullan."),
+});
+
+export async function updateProfileAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  const parsed = profileSchema.safeParse({ full_name: formData.get("full_name") ?? "", phone: formData.get("phone") ?? "" });
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return fail(issue.message, { [String(issue.path[0])]: issue.message });
+  }
+  const supabase = await createClient();
   const { error } = await supabase
     .from("profiles")
     .update({ full_name: parsed.data.full_name, phone: parsed.data.phone || null })
     .eq("user_id", user.id);
+  if (error) return fail("Profilin güncellenemedi. Biraz sonra tekrar dene.");
+  revalidatePanel("/panel/hesap");
+  return ok("Profil bilgilerin güncellendi.");
+}
+
+export async function updateEmailPreferenceAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  const enabled = formData.get("email_notifications") === "on";
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ email_notifications: enabled }).eq("user_id", user.id);
+  if (error) return fail("Tercihin kaydedilemedi. Tekrar dene.");
+  revalidatePath("/panel/hesap");
+  return ok(enabled ? "E-posta bildirimleri açıldı." : "E-posta bildirimleri kapatıldı. Panel bildirimleri devam eder.");
+}
+
+const passwordSchema = z
+  .object({
+    password: z.string().min(8, "Şifre en az 8 karakter olmalı.").max(72, "Şifre en fazla 72 karakter olabilir."),
+    confirm: z.string(),
+  })
+  .refine((value) => value.password === value.confirm, { message: "Şifreler eşleşmiyor.", path: ["confirm"] });
+
+export async function changePasswordAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  const parsed = passwordSchema.safeParse({ password: formData.get("password") ?? "", confirm: formData.get("confirm") ?? "" });
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    return fail(issue.message, { [String(issue.path[0])]: issue.message });
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) {
-    return { error: "Profil güncellenemedi. Lütfen tekrar deneyin." };
+    const message = error.message.toLowerCase();
+    if (message.includes("different") || message.includes("same")) return fail("Yeni şifre eskisiyle aynı olamaz.", { password: "Farklı bir şifre seç." });
+    if (message.includes("reauthentication") || message.includes("recent")) return fail("Güvenlik için çıkış yapıp tekrar giriş yaptıktan sonra şifreni değiştir.");
+    return fail("Şifren değiştirilemedi. Daha güçlü bir şifre deneyebilirsin.");
+  }
+  return ok("Şifren değiştirildi.");
+}
+
+export async function deleteAccountAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const user = await currentUser();
+  if (!user) return fail(SESSION_EXPIRED);
+  if (!hasAdminServiceKey()) {
+    return fail("Hesap silme şu an panelden yapılamıyor. Destek ekibimize yaz, hesabını hemen silelim.");
+  }
+  const typed = String(formData.get("confirm") ?? "").trim().toLocaleLowerCase("tr-TR");
+  if (typed !== user.email.toLocaleLowerCase("tr-TR")) {
+    return fail("Onay için e-posta adresini aynen yaz.", { confirm: "E-posta adresin eşleşmiyor." });
+  }
+  if (user.role === "admin") return fail("Admin hesapları panelden silinemez.");
+
+  try {
+    const admin = createAdminClient();
+    const { error } = await admin.auth.admin.deleteUser(user.id);
+    if (error) throw error;
+  } catch (error) {
+    console.error("Hesap silinemedi:", error);
+    return fail("Hesabın silinemedi. Biraz sonra tekrar dene ya da destek ekibine yaz.");
   }
 
-  revalidatePath("/panel/hesap");
-  return { message: "Profil bilgilerin güncellendi." };
+  await sendAdminNotification("Hesap silindi", [`${user.displayName} (${user.email}) hesabını sildi.`]);
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  revalidatePath("/", "layout");
+  redirect("/");
 }

@@ -1,112 +1,131 @@
-// src/app/(panel)/panel/talepler/page.tsx — Taleplerim: analiz/tez + eğitim talep geçmişi
+// src/app/(panel)/panel/talepler/page.tsx — taleplerim: filtre çipleri, durum hattı, işlem bekleyen vurgusu
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import { getMyContactRequests, getMyIndividualRequests } from "@/lib/queries/member";
-import {
-  contactStatusLabels,
-  requestStatusLabels,
-  requestTypeLabels,
-  serviceTypeLabels,
-} from "@/lib/types/catalog";
-import { StatusBanner } from "@/components/admin/fields";
+import { ArrowRight, Inbox } from "lucide-react";
+import { requireUser } from "@/lib/auth";
+import { getMyRequests } from "@/lib/queries/member";
+import { requestFilterLabels, requestMatchesFilter, type RequestFilter } from "@/lib/queries/member-types";
+import { applyDiscount, formatDateShort, formatRelative } from "@/lib/format";
+import { requestKindLabels, requestNeedsMemberAction, requestTrack } from "@/lib/types/platform";
+import { Card } from "@/components/ui/card";
+import { Price } from "@/components/ui/data";
+import { EmptyState } from "@/components/ui/feedback";
+import { Accent, PageHeader } from "@/components/ui/page-header";
+import { StatusTrack } from "@/components/ui/progress";
+import { NewRequestMenu } from "@/components/panel/new-request-menu";
+import { RequestStatusBadge } from "@/components/panel/status-badges";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Taleplerim" };
 export const dynamic = "force-dynamic";
 
-export default async function MyRequestsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ saved?: string }>;
-}) {
-  const { saved } = await searchParams;
-  const [contactRequests, individualRequests] = await Promise.all([
-    getMyContactRequests(),
-    getMyIndividualRequests(),
-  ]);
+const filters = Object.keys(requestFilterLabels) as RequestFilter[];
+
+export default async function RequestsPage({ searchParams }: { searchParams: Promise<{ durum?: string }> }) {
+  const { durum } = await searchParams;
+  const filter: RequestFilter = filters.includes(durum as RequestFilter) ? (durum as RequestFilter) : "tumu";
+  const user = await requireUser("/panel/talepler");
+  const requests = await getMyRequests(user.id);
+  const visible = requests.filter((request) => requestMatchesFilter(request, filter));
+  // İşlem bekleyenler her zaman üstte
+  visible.sort((a, b) => Number(requestNeedsMemberAction(b)) - Number(requestNeedsMemberAction(a)));
 
   return (
-    <>
-      <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight">Taleplerim</h1>
-          <p className="mt-1 text-sm text-ink-soft">Analiz, tez ve eğitim taleplerinin geçmişi.</p>
-        </div>
-        <Link
-          href="/panel/talepler/yeni"
-          className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong sm:w-auto"
-        >
-          <Plus className="size-4 shrink-0" aria-hidden />
-          <span className="sm:hidden">Yeni Talep</span>
-          <span className="hidden sm:inline">Yeni Analiz/Tez Talebi</span>
-        </Link>
-      </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title={<Accent>Taleplerim</Accent>}
+        description="Analiz, tez düzenleme ve birebir eğitim taleplerin. Teklifleri onayla, ekiple yazış, dosyalarını yönet."
+        actions={<NewRequestMenu variant="primary" />}
+      />
 
-      <div className="mt-6">
-        <StatusBanner saved={saved} />
-      </div>
-
-      <section aria-labelledby="contact-requests-heading">
-        <h2 id="contact-requests-heading" className="font-display text-lg font-semibold">Analiz / Tez Talepleri</h2>
-        <div className="mt-3 space-y-3">
-          {contactRequests.map((request) => (
-            <div key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white p-4 shadow-sm">
-              <div className="min-w-0">
-                <p className="font-semibold">{serviceTypeLabels[request.service_type]}</p>
-                <p className="mt-0.5 truncate text-sm text-ink-soft">{request.message}</p>
-                <p className="mt-0.5 text-xs text-ink-soft">{new Date(request.created_at).toLocaleDateString("tr-TR")}</p>
-              </div>
-              <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent">
-                {contactStatusLabels[request.status]}
-              </span>
-            </div>
-          ))}
-          {contactRequests.length === 0 && (
-            <p className="rounded-xl border border-dashed border-line bg-white p-5 text-sm text-ink-soft">
-              Henüz analiz veya tez talebin yok.
-            </p>
-          )}
-        </div>
-      </section>
-
-      <section aria-labelledby="training-requests-heading" className="mt-8">
-        <h2 id="training-requests-heading" className="font-display text-lg font-semibold">Eğitim Talepleri</h2>
-        <div className="mt-3 space-y-3">
-          {individualRequests.map((request) => (
-            <div key={request.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-white p-4 shadow-sm">
-              <div>
-                <p className="font-semibold">
-                  {request.education_modules?.title}
-                  <span className="text-ink-soft">
-                    {" · "}
-                    {request.request_type === "bundle" && request.bundle_packages?.title
-                      ? request.bundle_packages.title
-                      : requestTypeLabels[request.request_type]}
+      {requests.length === 0 ? (
+        <EmptyState
+          icon={Inbox}
+          title="Henüz talebin yok"
+          description="İhtiyacını birkaç adımda anlat; ekibimiz inceleyip panelinde teklif sunsun."
+          action={<NewRequestMenu variant="primary" align="center" label="Talep oluştur" />}
+        />
+      ) : (
+        <>
+          <nav aria-label="Talep filtresi" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:px-0">
+            {filters.map((key) => {
+              const count = requests.filter((request) => requestMatchesFilter(request, key)).length;
+              const active = key === filter;
+              return (
+                <Link
+                  key={key}
+                  href={key === "tumu" ? "/panel/talepler" : `/panel/talepler?durum=${key}`}
+                  aria-current={active ? "page" : undefined}
+                  className={cn(
+                    "inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-semibold transition-colors",
+                    active ? "border-ink bg-ink text-white" : "border-line-strong bg-paper text-ink-soft hover:border-ink-muted hover:text-ink",
+                  )}
+                >
+                  {requestFilterLabels[key]}
+                  <span
+                    className={cn(
+                      "tabular font-mono text-xs",
+                      active ? "text-white/70" : key === "bekleyen" && count > 0 ? "rounded-full bg-amber px-1.5 text-ink" : "text-ink-muted",
+                    )}
+                  >
+                    {count}
                   </span>
-                </p>
-                <p className="mt-0.5 text-xs text-ink-soft">
-                  {new Date(request.created_at).toLocaleDateString("tr-TR")}
-                  {request.request_type !== "schedule" &&
-                    ` · ${request.calculated_price.toLocaleString("tr-TR")}₺`}
-                </p>
-                {request.request_type === "schedule" && request.user_message && (
-                  <p className="mt-1 text-sm text-ink-soft">{request.user_message}</p>
-                )}
-              </div>
-              <span className="rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent">
-                {requestStatusLabels[request.status]}
-              </span>
-            </div>
-          ))}
-          {individualRequests.length === 0 && (
-            <p className="rounded-xl border border-dashed border-line bg-white p-5 text-sm text-ink-soft">
-              Henüz eğitim talebin yok.{" "}
-              <Link href="/panel/kesfet" className="font-semibold text-accent hover:underline">Keşfet</Link>{" "}
-              sekmesinden oluşturabilirsin.
-            </p>
+                </Link>
+              );
+            })}
+          </nav>
+
+          {visible.length === 0 ? (
+            <EmptyState title="Bu filtrede talep yok" description="Başka bir filtre seç ya da tüm taleplerine dön." action={<Link className="text-sm font-semibold text-accent hover:underline" href="/panel/talepler">Tüm talepler</Link>} />
+          ) : (
+            <ul className="flex flex-col gap-3">
+              {visible.map((request) => {
+                const track = requestTrack(request.kind, request.training_mode, request.status);
+                const needsAction = requestNeedsMemberAction(request);
+                return (
+                  <li key={request.id}>
+                    <Link href={`/panel/talepler/${request.id}`} className="group block">
+                      <Card
+                        variant="interactive"
+                        className={cn("flex flex-col gap-4", needsAction && "border-amber shadow-[0_0_0_3px_rgb(245_158_11/0.12)]")}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-soft">{requestKindLabels[request.kind]}</p>
+                            <p className="mt-0.5 font-semibold text-balance group-hover:text-accent">{request.title || requestKindLabels[request.kind]}</p>
+                          </div>
+                          <RequestStatusBadge status={request.status} size="sm" />
+                        </div>
+                        <StatusTrack steps={track.labels} current={track.current} finished={track.finished} className="max-w-xl" />
+                        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-line pt-3 text-sm">
+                          {needsAction ? (
+                            <span className="flex flex-wrap items-center gap-x-2 font-semibold text-amber-ink">
+                              Teklif onayını bekliyor
+                              {request.quote_amount ? (
+                                <Price amount={applyDiscount(request.quote_amount, request.discount_percent)} className="text-ink" />
+                              ) : null}
+                              {request.quote_valid_until && (
+                                <span className="font-normal text-ink-soft">· {formatDateShort(request.quote_valid_until)} tarihine kadar</span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-ink-soft">
+                              {request.progress_note ? <span className="line-clamp-1">{request.progress_note}</span> : <>Son hareket {formatRelative(request.last_activity_at)}</>}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center gap-1 font-semibold text-accent">
+                            {needsAction ? "Teklifi incele" : "Ayrıntılar"} <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+                          </span>
+                        </div>
+                      </Card>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           )}
-        </div>
-      </section>
-    </>
+        </>
+      )}
+    </div>
   );
 }

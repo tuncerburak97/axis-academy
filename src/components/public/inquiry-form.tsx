@@ -1,56 +1,55 @@
-// src/components/public/inquiry-form.tsx — public "bize ulaşın" formu (login gerektirmez)
+// src/components/public/inquiry-form.tsx — giriş gerektirmeyen "bize yaz" formu (honeypot korumalı)
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { createPublicInquiry } from "@/lib/actions/public";
-import { FormStatus } from "@/components/auth/auth-card";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Field, Input, Textarea } from "@/components/ui/field";
+import { Alert } from "@/components/ui/feedback";
+import { toast } from "@/components/ui/toast";
 import type { AuthFormState } from "@/lib/types";
 
 const initialState: AuthFormState = {};
-const inputClass =
-  "mt-1 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm transition-colors focus:border-accent";
 
 export function InquiryForm() {
   const [state, formAction, isPending] = useActionState(createPublicInquiry, initialState);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    if (state.message) {
+      toast.success("Mesajın bize ulaştı", { description: "Yanıtımızı bıraktığın e-posta adresine göndereceğiz." });
+      formRef.current?.reset();
+    }
+  }, [state]);
 
   return (
-    <form action={formAction} className="rounded-2xl border border-line bg-white p-6 shadow-sm">
-      <FormStatus error={state.error} message={state.message} />
+    <Card padding="lg">
+      <form ref={formRef} action={formAction} className="flex flex-col gap-5" noValidate={false}>
+        {state.error && <Alert tone="danger">{state.error}</Alert>}
+        {state.message && <Alert tone="success">{state.message}</Alert>}
 
-      {/* Honeypot: botlara görünür, kullanıcılara görünmez */}
-      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden className="hidden" />
-
-      <div className="mt-2 grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="inquiry-name" className="block text-sm font-medium">Adınız Soyadınız</label>
-          <input id="inquiry-name" name="name" type="text" required className={inputClass} />
+        {/* Honeypot: botlar doldurur, insanlar görmez */}
+        <div aria-hidden className="absolute left-[-9999px] top-auto h-px w-px overflow-hidden">
+          <label htmlFor="inquiry-website">Web sitesi</label>
+          <input id="inquiry-website" type="text" name="website" tabIndex={-1} autoComplete="off" />
         </div>
-        <div>
-          <label htmlFor="inquiry-email" className="block text-sm font-medium">E-posta</label>
-          <input id="inquiry-email" name="email" type="email" required className={inputClass} />
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field id="inquiry-name" label="Adın soyadın">
+            <Input name="name" required minLength={2} maxLength={100} autoComplete="name" />
+          </Field>
+          <Field id="inquiry-email" label="E-posta">
+            <Input name="email" type="email" required autoComplete="email" />
+          </Field>
         </div>
-      </div>
-
-      <div className="mt-4">
-        <label htmlFor="inquiry-message" className="block text-sm font-medium">Mesajınız</label>
-        <textarea
-          id="inquiry-message"
-          name="message"
-          rows={5}
-          required
-          minLength={10}
-          placeholder="Sorunuzu ya da ihtiyacınızı kısaca anlatın; size e-posta ile dönelim."
-          className={inputClass}
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={isPending}
-        className="mt-6 w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-accent-strong disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isPending ? "Gönderiliyor…" : "Mesajı Gönder"}
-      </button>
-    </form>
+        <Field id="inquiry-message" label="Mesajın" hint="Analiz, eğitim ya da tez; aklındaki soruyu kısaca yaz.">
+          <Textarea name="message" rows={6} required minLength={10} maxLength={5000} />
+        </Field>
+        <Button type="submit" size="lg" loading={isPending} className="sm:self-start">
+          Mesajı gönder
+        </Button>
+      </form>
+    </Card>
   );
 }

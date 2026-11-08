@@ -1,4 +1,4 @@
-// src/lib/actions/public.ts — login gerektirmeyen "bize ulaşın" talebi
+// src/lib/actions/public.ts — giriş gerektirmeyen "bize yaz" mesajı (public_inquiries; admin /admin/sorular)
 "use server";
 
 import { z } from "zod";
@@ -8,9 +8,9 @@ import { sendAdminNotification } from "@/lib/email";
 import type { AuthFormState } from "@/lib/types";
 
 const inquirySchema = z.object({
-  name: z.string().min(2, "Adınızı yazın.").max(100),
-  email: z.string().email("Geçerli bir e-posta adresi girin."),
-  message: z.string().min(10, "Mesajınız en az 10 karakter olmalı.").max(5000),
+  name: z.string().trim().min(2, "Adını yaz (en az 2 karakter).").max(100),
+  email: z.string().trim().email("Geçerli bir e-posta adresi yaz; yanıtımızı oraya göndereceğiz."),
+  message: z.string().trim().min(10, "Mesajın en az 10 karakter olmalı.").max(5000),
   website: z.string().max(0, "Gönderim reddedildi."), // honeypot: botlar doldurur, insanlar görmez
 });
 
@@ -32,7 +32,7 @@ export async function createPublicInquiry(_prev: AuthFormState, formData: FormDa
     message: parsed.data.message,
   });
   if (error) {
-    return { error: "Mesajınız gönderilemedi. Lütfen tekrar deneyin." };
+    return { error: "Mesajın gönderilemedi. Bağlantını kontrol edip tekrar dene." };
   }
 
   await sendAdminNotification("Yeni iletişim mesajı (Bize Ulaşın)", [
@@ -41,6 +41,6 @@ export async function createPublicInquiry(_prev: AuthFormState, formData: FormDa
     `Mesaj: ${parsed.data.message}`,
   ]);
 
-  revalidatePath("/admin/talepler");
-  return { message: "Mesajınız bize ulaştı. En kısa sürede e-posta üzerinden dönüş yapacağız." };
+  revalidatePath("/admin/sorular");
+  return { message: "Mesajın bize ulaştı. Yanıtımızı e-posta ile göndereceğiz." };
 }

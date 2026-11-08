@@ -1,27 +1,45 @@
-// src/lib/actions/auth.ts — kayıt, giriş, Google OAuth ve çıkış Server Action'ları
+// src/lib/actions/auth.ts — kayıt, giriş, Google OAuth, şifre sıfırlama ve çıkış Server Action'ları
+// Tüm giriş akışları ?next= ile kullanıcının kaldığı sayfaya döner (yalnızca site içi yollar: safeNextPath).
 "use server";
 
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { safeNextPath } from "@/lib/auth";
 import type { AuthFormState } from "@/lib/types";
 
+export interface LoginFormState extends AuthFormState {
+  /** E-posta doğrulanmamışsa formda "doğrulama e-postasını tekrar gönder" seçeneği açılır */
+  unconfirmedEmail?: string;
+  email?: string;
+}
+
 const registerSchema = z.object({
-  fullName: z.string().min(2, "Ad soyad en az 2 karakter olmalı.").max(100, "Ad soyad çok uzun."),
-  email: z.string().email("Geçerli bir e-posta adresi girin."),
-  password: z.string().min(8, "Şifre en az 8 karakter olmalı."),
+  fullName: z.string().trim().min(2, "Adını ve soyadını yaz (en az 2 karakter).").max(100, "Ad soyad çok uzun."),
+  email: z.string().trim().email("Geçerli bir e-posta adresi yaz."),
+  password: z.string().min(8, "Şifren en az 8 karakter olmalı."),
 });
 
 const loginSchema = z.object({
-  email: z.string().email("Geçerli bir e-posta adresi girin."),
-  password: z.string().min(1, "Şifre gerekli."),
+  email: z.string().trim().email("Geçerli bir e-posta adresi yaz."),
+  password: z.string().min(1, "Şifreni yaz."),
 });
 
-// İsteğin geldiği origin'i döner; OAuth ve e-posta doğrulama yönlendirmeleri için
+const emailSchema = z.string().trim().email("Geçerli bir e-posta adresi yaz.");
+
+// İsteğin geldiği origin; OAuth ve e-posta bağlantılarının dönüş adresi için
 async function getOrigin(): Promise<string> {
   const headerList = await headers();
-  return headerList.get("origin") ?? "http://localhost:3000";
+  const origin = headerList.get("origin");
+  if (origin) return origin;
+  const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+  const proto = headerList.get("x-forwarded-proto") ?? "http";
+  return host ? `${proto}://${host}` : "http://localhost:3000";
+}
+
+function callbackUrl(origin: string, next: string): string {
+  return `${origin}/auth/callback?next=${encodeURIComponent(next)}`;
 }
 
 export async function register(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
@@ -33,48 +51,126 @@ export async function register(_prev: AuthFormState, formData: FormData): Promis
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
   }
+  const next = safeNextPath(formData.get("next")?.toString());
 
   const supabase = await createClient();
   const origin = await getOrigin();
 
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback`,
+      emailRedirectTo: callbackUrl(origin, next),
       data: { full_name: parsed.data.fullName },
     },
   });
 
   if (error) {
     if (error.code === "user_already_exists") {
-      return { error: "Bu e-posta ile zaten bir hesap var. Giriş yapmayı deneyin." };
+      return { error: "Bu e-postayla zaten bir hesap var. Giriş yapmayı ya da şifreni sıfırlamayı dene." };
     }
-    return { error: "Kayıt sırasında bir sorun oluştu. Lütfen tekrar deneyin." };
+    if (error.code === "weak_password") {
+      return { error: "Şifren çok zayıf. Harf ve rakam karışık, en az 8 karakterlik bir şifre seç." };
+    }
+    return { error: "Kayıt sırasında bir sorun oluştu. Birazdan tekrar dene." };
   }
 
-  return { message: "Doğrulama bağlantısı e-postana gönderildi. Gelen kutunu kontrol et." };
+  // E-posta doğrulaması kapalıysa oturum hemen açılır
+  if (data.session) redirect(next);
+
+  return { message: `Doğrulama bağlantısını ${parsed.data.email} adresine gönderdik. Bağlantıya tıklayınca kaldığın yere döneceksin.` };
 }
 
-export async function login(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+export async function login(_prev: LoginFormState, formData: FormData): Promise<LoginFormState> {
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
     password: formData.get("password"),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0].message };
+    return { error: parsed.error.issues[0].message, email: formData.get("email")?.toString() };
   }
+  const next = safeNextPath(formData.get("next")?.toString());
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword(parsed.data);
 
   if (error) {
     if (error.code === "email_not_confirmed") {
-      return { error: "E-posta adresin henüz doğrulanmamış. Gelen kutundaki bağlantıya tıkla." };
+      return {
+        error: "E-posta adresin henüz doğrulanmamış. Gelen kutundaki bağlantıya tıkla ya da yeni bağlantı iste.",
+        unconfirmedEmail: parsed.data.email,
+        email: parsed.data.email,
+      };
     }
-    return { error: "E-posta veya şifre hatalı." };
+    return { error: "E-posta ya da şifre hatalı. Tekrar dene veya şifreni sıfırla.", email: parsed.data.email };
   }
 
+  redirect(next);
+}
+
+/** Doğrulama e-postasını yeniden gönderir */
+export async function resendVerification(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const parsed = emailSchema.safeParse(formData.get("email"));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+  const next = safeNextPath(formData.get("next")?.toString());
+
+  const supabase = await createClient();
+  const origin = await getOrigin();
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed.data,
+    options: { emailRedirectTo: callbackUrl(origin, next) },
+  });
+  if (error) {
+    if (error.status === 429) return { error: "Kısa süre içinde çok fazla istek geldi. Bir dakika sonra tekrar dene." };
+    return { error: "Doğrulama e-postası gönderilemedi. Birazdan tekrar dene." };
+  }
+  return { message: "Yeni doğrulama bağlantısı gönderildi. Gelen kutunu (ve gereksiz klasörünü) kontrol et." };
+}
+
+/** Şifre sıfırlama bağlantısı; hesabın varlığı sızmasın diye her durumda aynı mesaj döner */
+export async function requestPasswordReset(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const parsed = emailSchema.safeParse(formData.get("email"));
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const origin = await getOrigin();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data, {
+    redirectTo: `${origin}/auth/callback?next=/sifre-yenile`,
+  });
+  if (error?.status === 429) {
+    return { error: "Kısa süre içinde çok fazla istek geldi. Bir dakika sonra tekrar dene." };
+  }
+  return {
+    message: `${parsed.data} adresine kayıtlı bir hesap varsa şifre yenileme bağlantısı birkaç dakika içinde gelir.`,
+  };
+}
+
+const newPasswordSchema = z
+  .object({
+    password: z.string().min(8, "Yeni şifren en az 8 karakter olmalı."),
+    confirm: z.string(),
+  })
+  .refine((value) => value.password === value.confirm, { message: "İki şifre birbiriyle aynı değil.", path: ["confirm"] });
+
+export async function updatePassword(_prev: AuthFormState, formData: FormData): Promise<AuthFormState> {
+  const parsed = newPasswordSchema.safeParse({ password: formData.get("password"), confirm: formData.get("confirm") });
+  if (!parsed.success) return { error: parsed.error.issues[0].message };
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Şifre yenileme bağlantısının süresi dolmuş. Yeni bir bağlantı iste." };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  if (error) {
+    if (error.code === "same_password") return { error: "Yeni şifren eskisinden farklı olmalı." };
+    if (error.code === "weak_password") return { error: "Şifren çok zayıf. Daha uzun ve karışık bir şifre seç." };
+    return { error: "Şifren güncellenemedi. Birazdan tekrar dene." };
+  }
   redirect("/panel");
 }
 
@@ -109,17 +205,18 @@ export async function adminLogin(_prev: AuthFormState, formData: FormData): Prom
   redirect("/admin");
 }
 
-export async function loginWithGoogle(): Promise<void> {
+export async function loginWithGoogle(formData?: FormData): Promise<void> {
+  const next = safeNextPath(formData?.get("next")?.toString());
   const supabase = await createClient();
   const origin = await getOrigin();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options: { redirectTo: `${origin}/auth/callback` },
+    options: { redirectTo: callbackUrl(origin, next) },
   });
 
   if (error || !data.url) {
-    redirect("/giris?error=oauth");
+    redirect(`/giris?error=oauth&next=${encodeURIComponent(next)}`);
   }
   redirect(data.url);
 }

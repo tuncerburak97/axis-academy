@@ -1,42 +1,55 @@
-// src/components/public/site-header.tsx — public site üst navigasyonu (375px optimize)
+// src/components/public/site-header.tsx — public üst menü: logo, ana bağlantılar, oturuma göre sağ taraf
 import Link from "next/link";
-import { publicNavLinks } from "@/lib/navigation";
-import { MobileSiteMenu } from "@/components/public/mobile-site-menu";
+import { getSessionUser } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { DesktopNav, MobileMenu, UserMenu } from "@/components/public/site-nav";
+import { LogoMark } from "@/components/brand/logo-mark";
+import { cn } from "@/lib/utils";
 
-export function SiteHeader() {
+export function Logo({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-white/85 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:h-16 sm:gap-3 sm:px-6">
-        <Link href="/" className="shrink-0 font-display text-base font-bold tracking-tight sm:text-lg">
-          Axis<span className="text-accent"> Akademi</span>
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <LogoMark className={cn("size-8", tone === "dark" && "rounded-[9px] ring-1 ring-white/15")} />
+      <span>
+        <span className="font-semibold tracking-[-0.03em]">Axis</span>{" "}
+        <span className={cn("accent-word text-[1.12em]", tone === "dark" ? "text-accent-glow" : "text-accent")}>Akademi</span>
+      </span>
+    </span>
+  );
+}
+
+export async function SiteHeader() {
+  const user = await getSessionUser();
+  const viewer = user ? { name: user.displayName, email: user.email, isAdmin: user.role === "admin" } : null;
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-line/80 bg-paper/85 backdrop-blur-md supports-[backdrop-filter]:bg-paper/75">
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+        <Link href="/" className="shrink-0 rounded-md text-lg text-ink" aria-label="Axis Akademi anasayfa">
+          <Logo />
         </Link>
 
-        <nav aria-label="Ana menü" className="hidden items-center gap-6 md:flex">
-          {publicNavLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-medium text-ink-soft transition-colors hover:text-ink"
-            >
-              {link.label}
-            </Link>
-          ))}
-        </nav>
+        <DesktopNav />
 
-        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-          <Link
-            href="/giris"
-            className="hidden min-h-11 items-center rounded-lg px-3 py-2 text-sm font-semibold text-ink transition-colors hover:bg-surface sm:inline-flex sm:px-4"
-          >
-            Giriş Yap
-          </Link>
-          <Link
-            href="/kayit"
-            className="hidden min-h-11 items-center rounded-lg bg-accent px-3 py-2 text-sm font-semibold text-white shadow-sm transition-all hover:bg-accent-strong hover:shadow sm:inline-flex sm:px-4"
-          >
-            Kayıt Ol
-          </Link>
-          <MobileSiteMenu />
+        <div className="flex shrink-0 items-center gap-2">
+          {viewer ? (
+            <>
+              <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
+                <Link href="/panel">Panelim</Link>
+              </Button>
+              <UserMenu viewer={viewer} />
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+                <Link href="/giris">Giriş</Link>
+              </Button>
+              <Button asChild size="sm" className="hidden sm:inline-flex">
+                <Link href="/kayit">Ücretsiz kayıt ol</Link>
+              </Button>
+            </>
+          )}
+          <MobileMenu viewer={viewer} />
         </div>
       </div>
     </header>
