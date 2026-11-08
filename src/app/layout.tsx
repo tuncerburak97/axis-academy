@@ -1,10 +1,18 @@
-// src/app/layout.tsx — kök layout; fontları yükler ve global metadata tanımlar
+// src/app/layout.tsx — kök layout; fontları yükler, global metadata ve bildirim (toast) katmanını tanımlar
 import type { Metadata } from "next";
-import { Inter, Sora } from "next/font/google";
+import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const sora = Sora({ subsets: ["latin"], variable: "--font-sora" });
+// Geist: arayüz ve başlıklar · Instrument Serif: yalnızca vurgu kelimeleri · Geist Mono: tarih, saat, fiyat
+const geist = Geist({ subsets: ["latin", "latin-ext"], variable: "--font-geist" });
+const geistMono = Geist_Mono({ subsets: ["latin", "latin-ext"], variable: "--font-geist-mono" });
+const instrumentSerif = Instrument_Serif({
+  subsets: ["latin", "latin-ext"],
+  weight: "400",
+  style: ["normal", "italic"],
+  variable: "--font-instrument-serif",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -17,8 +25,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="tr" className={`${inter.variable} ${sora.variable}`}>
-      <body>{children}</body>
+    <html lang="tr" className={`${geist.variable} ${geistMono.variable} ${instrumentSerif.variable}`}>
+      <body>
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

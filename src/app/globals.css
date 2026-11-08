@@ -1,29 +1,106 @@
-/* src/app/globals.css — Tailwind v4 + "Aydınlık Editorial" tasarım token'ları */
+/* src/app/globals.css — Tailwind v4 + Axis 2.0 tasarım token'ları
+   Eski token adları (ink, accent, surface, line…) korunur; yeni ekranlar aynı adlarla yeni kiti kullanır.
+   Tek tema: aydınlık (proje kararı, dark mode yok). */
 @import "tailwindcss";
 
 @theme inline {
-  /* Renk token'ları: sade, aydınlık zemin + güçlü vurgular */
-  --color-ink: #0e1a2b;          /* ana metin, koyu lacivert */
-  --color-ink-soft: #5b6472;     /* ikincil metin */
-  --color-surface: #f8f9fb;      /* açık yüzey */
-  --color-line: #e6e9ef;         /* ince ayırıcı/kenarlık */
-  --color-accent: #4f46e5;       /* birincil aksiyon (indigo) */
-  --color-accent-strong: #4338ca;/* hover tonu */
-  --color-accent-soft: #eef2ff;  /* indigo açık zemin */
-  --color-amber: #f59e0b;        /* fiyat/istatistik vurgusu */
-  --color-amber-soft: #fef3c7;
-  --color-success: #16a34a;
+  /* Zemin ve yüzeyler */
+  --color-canvas: #f6f7fb;        /* uygulama arka planı (panel, admin) */
+  --color-paper: #ffffff;         /* kart ve form yüzeyi */
+  --color-surface: #f4f6fa;       /* hafif dolgu, hover zemini */
+  --color-line: #e6e9ef;          /* ince ayırıcı/kenarlık */
+  --color-line-strong: #d3d9e3;   /* form kenarlığı, vurgulu ayırıcı */
 
-  /* Tipografi: Sora (display) + Inter (gövde), next/font değişkenleri */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, sans-serif;
+  /* Metin */
+  --color-ink: #0e1a2b;           /* ana metin, koyu lacivert; koyu kart zemini */
+  --color-ink-soft: #5b6472;      /* ikincil metin */
+  --color-ink-muted: #8a93a3;     /* üçüncül metin, placeholder */
+  --color-ink-raised: #17253b;    /* koyu kart içindeki ikinci katman */
+
+  /* Marka: indigo aksiyon, amber dikkat/doluluk */
+  --color-accent: #4f46e5;
+  --color-accent-strong: #4338ca;
+  --color-accent-soft: #eef2ff;
+  --color-accent-ink: #3730a3;    /* açık indigo zemin üstünde metin */
+  --color-accent-glow: #a5b4fc;   /* koyu zeminde indigo vurgu */
+  --color-amber: #f59e0b;
+  --color-amber-soft: #fef3c7;
+  --color-amber-ink: #92400e;
+
+  /* Anlamsal durumlar (vurgu renginden ayrı) */
+  --color-success: #16a34a;
+  --color-success-soft: #dcfce7;
+  --color-success-ink: #166534;
+  --color-danger: #dc2626;
+  --color-danger-soft: #fee2e2;
+  --color-danger-ink: #991b1b;
+  --color-info: #0284c7;
+  --color-info-soft: #e0f2fe;
+  --color-info-ink: #075985;
+
+  /* Tipografi: Geist (arayüz) + Instrument Serif (vurgu) + Geist Mono (veri) */
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-instrument-serif), "Iowan Old Style", Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Yükseklik: kartlar neredeyse düz, açılır katmanlar belirgin */
+  --shadow-card: 0 1px 2px rgb(14 26 43 / 0.04), 0 0 0 1px rgb(14 26 43 / 0.02);
+  --shadow-raise: 0 2px 4px rgb(14 26 43 / 0.04), 0 12px 24px -12px rgb(14 26 43 / 0.18);
+  --shadow-pop: 0 4px 8px rgb(14 26 43 / 0.06), 0 24px 48px -16px rgb(14 26 43 / 0.28);
+
+  /* Hareket */
+  --ease-out-soft: cubic-bezier(0.21, 0.65, 0.35, 1);
 
   /* Mobil gutter token (375px hedef) */
-  --spacing-page-x: 0.75rem;
+  --spacing-page-x: 1rem;
 }
 
 body {
   @apply bg-white text-ink font-sans antialiased;
+}
+
+/* Rakamların hizalandığı her yer: tarih, saat, fiyat, kontenjan */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Vurgu kelimesi: başlık içinde tek bir kelimeyi akademik serif italikle öne çıkarır */
+.accent-word {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* Açılır katman animasyonları (diyalog, menü, alt sayfa) */
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Hareket tercihine saygı: tüm geçişler ve animasyonlar kısalır */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Erişilebilirlik: tüm etkileşimli öğelerde görünür focus halkası */
