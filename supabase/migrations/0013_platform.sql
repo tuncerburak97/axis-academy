@@ -1220,3 +1220,41 @@ set content_json = jsonb_build_object('items', jsonb_build_array(
 )), updated_at = now()
 where page_key = 'faq' and section_key = 'items'
   and content_json::text like '%Eğitim detaylarını neden göremiyorum%';
+
+-- ============================================================
+-- 16. İSİM GÖRÜNÜRLÜĞÜ VE EĞİTMEN DOSYA SİLME
+-- ============================================================
+-- Üye kendi dönemindeki eğitmenin, eğitmen de kendi öğrencilerinin yalnızca adını görür (e-posta/telefon değil)
+create or replace function public.get_visible_profile_names(p_ids uuid[])
+returns table (user_id uuid, full_name text)
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select p.user_id, p.full_name
+  from public.profiles p
+  where p.user_id = any(p_ids)
+    and (
+      p.user_id = auth.uid()
+      or public.is_admin()
+      or exists (
+        select 1 from public.classes c
+        join public.class_enrollments e on e.class_id = c.id
+        where c.instructor_id = auth.uid() and e.user_id = p.user_id and e.status <> 'cancelled'
+      )
+      or exists (
+        select 1 from public.classes c
+        join public.class_enrollments e on e.class_id = c.id
+        where c.instructor_id = p.user_id and e.user_id = auth.uid()
+          and e.status in ('enrolled', 'in_progress', 'completed')
+      )
+    );
+$$;
+revoke execute on function public.get_visible_profile_names(uuid[]) from anon;
+
+create policy "class_materials_storage_delete_instructor" on storage.objects
+  for delete using (
+    bucket_id = 'class-materials'
+    and public.is_class_instructor(((storage.foldername(name))[1])::uuid)
+  );

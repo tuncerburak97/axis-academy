@@ -1,5 +1,5 @@
 // src/app/layout.tsx — kök layout; fontları yükler, global metadata ve bildirim (toast) katmanını tanımlar
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   description:
     "Bibliyometrik ve istatistiksel analiz, Excel/Word/PowerPoint eğitimleri ve tez düzenleme hizmetleri. Profesyonel, net ve güvenilir.",
 };
+
+// viewport-fit=cover: mobil alt sekme çubuğu güvenli alan boşluklarını (env(safe-area-inset-*)) kullanabilsin
+export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover", themeColor: "#ffffff" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

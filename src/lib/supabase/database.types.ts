@@ -664,6 +664,11 @@ isOneToOne: false
               "approved_count": number,"capacity": number,"duration_hours": number,"duration_weeks": number,"id": string,"schedule_note": string,"start_date": string,"title": string
             }[]
                            },
+"get_visible_profile_names":
+{ Args: { "p_ids": (string)[] }; Returns: {
+              "full_name": string,"user_id": string
+            }[]
+                           },
 "is_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
