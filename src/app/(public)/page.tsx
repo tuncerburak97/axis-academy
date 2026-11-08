@@ -1,223 +1,313 @@
-// src/app/(public)/page.tsx — anasayfa: hero (başlık + hizmet kartları), yaklaşan eğitimler, değer önerisi
+// src/app/(public)/page.tsx — anasayfa: niyet seçimi + canlı dönemler, programlar, süreç, hizmetler, yorumlar, SSS
 import Link from "next/link";
-import Image from "next/image";
-import {
-  BarChart3,
-  GraduationCap,
-  FileCheck2,
-  ArrowRight,
-  UserPlus,
-  MousePointerClick,
-  CalendarCheck,
-  Sparkles,
-  ShieldCheck,
-  Clock,
-} from "lucide-react";
+import { ArrowRight, ArrowUpRight, BarChart3, BookOpenCheck, Building2, CalendarDays, GraduationCap } from "lucide-react";
 import { getContent } from "@/lib/queries/content";
-import { getPublicAllUpcomingClasses } from "@/lib/queries/catalog";
-import { defaultHero, type HeroContent } from "@/lib/types/content";
-import { siteImages } from "@/lib/images";
-import { FadeUp, FloatingBadge, Reveal } from "@/components/public/motion-primitives";
-import { ProcessTimeline, StatBand, TrustStrip } from "@/components/public/marketing";
-import { PublicUpcomingClassesHero } from "@/components/public/public-upcoming-classes-hero";
-import { ValuePropositionSection } from "@/components/public/value-proposition-section";
+import { getCatalogCohorts, getProgramSummaries, getPublicReviews } from "@/lib/queries/public-catalog";
+import { defaultFaq, defaultHero, type FaqContent, type HeroContent } from "@/lib/types/content";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { StatusTrack } from "@/components/ui/progress";
+import { Accent, Eyebrow } from "@/components/ui/page-header";
+import { AccentTitle, Container, Section, SectionIntro } from "@/components/public/section";
+import { CohortMiniRow } from "@/components/public/cohort-row";
+import { ProgramCard } from "@/components/public/program-card";
+import { CtaBand, FaqList, Pipeline, ReviewList, TrustStrip } from "@/components/public/blocks";
+
+const intents = [
+  { href: "/programlar", icon: GraduationCap, title: "Bir program öğrenmek", hint: "Excel, Word, PowerPoint · grup ya da birebir" },
+  { href: "/analiz", icon: BarChart3, title: "Verimi analiz ettirmek", hint: "Bibliyometrik ve istatistiksel analiz" },
+  { href: "/tez-duzenleme", icon: BookOpenCheck, title: "Tezimi teslime hazırlamak", hint: "Biçim, kaynakça, enstitü şablonu" },
+  { href: "/kurumsal", icon: Building2, title: "Ekibime eğitim", hint: "Online, yerinde ya da karma" },
+];
 
 const services = [
   {
     href: "/analiz",
-    icon: BarChart3,
-    image: siteImages.analysis,
-    imageAlt: "Grafiklerle dolu analiz ekranı",
-    title: "Analiz",
-    description: "Bibliyometrik ve istatistiksel analizlerinizi uzman ekibimiz üstlenir; siz araştırmanıza odaklanın.",
-  },
-  {
-    href: "/egitim",
-    icon: GraduationCap,
-    image: siteImages.education,
-    imageAlt: "Birlikte çalışan öğrenciler",
-    title: "Eğitim",
-    description: "Excel, Word ve PowerPoint'te hazır paketler, size özel modüller veya sınıf eğitimleriyle ustalaşın.",
+    eyebrow: "Analiz",
+    title: "Bibliyometrik & istatistiksel analiz",
+    points: ["Yöntem seçimi ve veri kontrolü", "SPSS, R, VOSviewer, Bibliometrix", "Yayına hazır tablo ve şekiller"],
   },
   {
     href: "/tez-duzenleme",
-    icon: FileCheck2,
-    image: siteImages.thesis,
-    imageAlt: "Dolma kalemle yazılmış notlar",
-    title: "Tez Düzenleme",
-    description: "Teziniz biçim, kaynakça ve şablon kurallarına uygun, teslime hazır hâle getirilir.",
+    eyebrow: "Tez",
+    title: "Tez düzenleme",
+    points: ["Enstitü şablonuna tam uyum", "APA, IEEE, Chicago kaynakça", "Otomatik içindekiler ve listeler"],
+  },
+  {
+    href: "/kurumsal",
+    eyebrow: "Kurumsal",
+    title: "Ekibine özel eğitim",
+    points: ["Seviye ölçümüyle başlayan program", "Kendi iş dosyalarınızla uygulama", "Kişi sayısına göre net fiyat"],
   },
 ];
 
-const steps = [
-  { icon: UserPlus, title: "Ücretsiz kayıt ol", description: "E-posta ya da Google hesabınla saniyeler içinde üye ol." },
-  { icon: MousePointerClick, title: "Hizmetini seç", description: "Eğitim paketi, kendi modülün, sınıf ya da analiz/tez talebi — netlik bizde." },
-  { icon: CalendarCheck, title: "Takipte kal", description: "Panelinden her talebinin durumunu adım adım izle." },
-];
-
 export default async function HomePage() {
-  const [hero, upcomingClasses] = await Promise.all([
+  const [hero, cohorts, programs, reviews, faq] = await Promise.all([
     getContent<HeroContent>("home", "hero", defaultHero),
-    getPublicAllUpcomingClasses(),
+    getCatalogCohorts(undefined, 4),
+    getProgramSummaries(),
+    getPublicReviews(undefined, 3),
+    getContent<FaqContent>("faq", "items", defaultFaq),
   ]);
 
   return (
     <>
-      <section className="relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,var(--color-accent-soft),transparent_55%)]" aria-hidden />
-        <div className="mx-auto max-w-6xl px-3 py-16 sm:px-6 md:py-24">
-          <div className="grid items-center gap-12 md:grid-cols-2">
-            <div>
-              <FadeUp>
-                <p className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold tracking-wide text-accent">
-                  <Sparkles className="size-3.5" aria-hidden /> Analiz · Eğitim · Tez Düzenleme
-                </p>
-              </FadeUp>
-              <FadeUp delay={0.1}>
-                <h1 className="mt-5 font-display text-2xl font-bold leading-tight tracking-tight sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
-                  {hero.title}
-                </h1>
-              </FadeUp>
-              <FadeUp delay={0.2}>
-                <p className="mt-5 max-w-xl text-lg text-ink-soft">{hero.subtitle}</p>
-              </FadeUp>
-              <FadeUp delay={0.3}>
-                <div className="mt-8 flex flex-wrap gap-3">
-                  <Link
-                    href="/kayit"
-                    className="inline-flex items-center gap-2 rounded-xl bg-accent px-4 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-md active:scale-[0.98] sm:px-6 sm:text-base"
-                  >
-                    Hemen Kayıt Ol <ArrowRight className="size-4" aria-hidden />
-                  </Link>
-                  <Link
-                    href="/egitim"
-                    className="inline-flex items-center rounded-xl border border-line bg-white px-4 py-3 text-sm font-semibold text-ink transition-all hover:bg-surface active:scale-[0.98] sm:px-6 sm:text-base"
-                  >
-                    Eğitimleri İncele
-                  </Link>
-                </div>
-              </FadeUp>
-            </div>
+      {/* HERO: başlık + niyet seçimi | canlı dönemler */}
+      <section className="relative border-b border-line bg-canvas">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--color-line)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-line)_1px,transparent_1px)] bg-[size:56px_56px] opacity-40 [mask-image:radial-gradient(ellipse_at_top_left,black,transparent_70%)]"
+        />
+        <Container className="relative grid gap-10 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-14 lg:py-20">
+          <div className="min-w-0">
+            <Eyebrow>Analiz · Eğitim · Tez düzenleme</Eyebrow>
+            <h1 className="mt-4 text-[38px] font-semibold leading-[1.02] tracking-[-0.04em] text-balance sm:text-6xl">
+              <AccentTitle text={hero.title} />
+            </h1>
+            <p className="mt-5 max-w-xl text-base leading-relaxed text-ink-soft sm:text-lg">{hero.subtitle}</p>
 
-            <div className="relative hidden md:block">
-              <FadeUp delay={0.15}>
-                <div className="overflow-hidden rounded-3xl shadow-xl">
-                  <Image
-                    src={siteImages.hero}
-                    alt="Birlikte çalışan ve öğrenen bir ekip"
-                    width={700}
-                    height={500}
-                    priority
-                    className="h-[420px] w-full object-cover"
-                  />
-                </div>
-              </FadeUp>
-              <FloatingBadge delay={0.5} className="absolute -left-6 top-8">
-                <div className="flex items-center gap-2.5 rounded-xl bg-white px-4 py-3 shadow-lg">
-                  <span className="rounded-lg bg-accent-soft p-2 text-accent"><ShieldCheck className="size-5" aria-hidden /></span>
-                  <div className="text-sm">
-                    <p className="font-semibold leading-tight">Uzman ekip</p>
-                    <p className="text-xs text-ink-soft">Birebir takip</p>
-                  </div>
-                </div>
-              </FloatingBadge>
-              <FloatingBadge delay={0.7} className="absolute -bottom-5 right-8">
-                <div className="flex items-center gap-2.5 rounded-xl bg-white px-4 py-3 shadow-lg">
-                  <span className="rounded-lg bg-amber-soft p-2 text-amber"><Clock className="size-5" aria-hidden /></span>
-                  <div className="text-sm">
-                    <p className="font-semibold leading-tight">Esnek program</p>
-                    <p className="text-xs text-ink-soft">Sana uyan saatler</p>
-                  </div>
-                </div>
-              </FloatingBadge>
-            </div>
-          </div>
-
-          <div aria-labelledby="services-heading" className="mt-12 md:mt-16">
-            <Reveal>
-              <h2 id="services-heading" className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
-                Üç hizmet, tek çatı
-              </h2>
-              <p className="mt-2 max-w-lg text-ink-soft">Hangi aşamada olursanız olun, ihtiyacınıza uyan net bir çözüm var.</p>
-            </Reveal>
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
-              {services.map((service, index) => (
-                <Reveal key={service.href} delay={index * 0.12}>
-                  <Link
-                    href={service.href}
-                    className="group flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-lg active:scale-[0.99]"
-                  >
-                    <div className="relative h-40 overflow-hidden">
-                      <Image
-                        src={service.image}
-                        alt={service.imageAlt}
-                        width={600}
-                        height={320}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                      <span className="absolute bottom-3 left-4 inline-flex rounded-lg bg-white/95 p-2.5 text-accent shadow-sm">
-                        <service.icon className="size-5" aria-hidden />
+            <div className="mt-9">
+              <p className="text-sm font-semibold text-ink" id="niyet">
+                Neye ihtiyacın var?
+              </p>
+              <ul aria-labelledby="niyet" className="mt-3 grid gap-2 sm:grid-cols-2">
+                {intents.map((intent) => (
+                  <li key={intent.href} className="min-w-0">
+                    <Link
+                      href={intent.href}
+                      className="group flex min-h-[72px] items-center gap-3.5 rounded-2xl border border-line-strong bg-paper p-3.5 pr-4 transition-[border-color,box-shadow] hover:border-accent hover:shadow-[0_0_0_3px_rgb(79_70_229/0.12)]"
+                    >
+                      <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-accent-soft text-accent">
+                        <intent.icon className="size-5" aria-hidden />
                       </span>
-                    </div>
-                    <div className="flex flex-1 flex-col p-6">
-                      <h3 className="font-display text-xl font-semibold">{service.title}</h3>
-                      <p className="mt-2 text-sm leading-relaxed text-ink-soft">{service.description}</p>
-                      <p className="mt-auto flex items-center gap-1 pt-4 text-sm font-semibold text-accent">
-                        Detayları gör
-                        <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
-                      </p>
-                    </div>
-                  </Link>
-                </Reveal>
-              ))}
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-semibold leading-snug text-ink">{intent.title}</span>
+                        <span className="mt-0.5 block truncate text-[13px] text-ink-soft">{intent.hint}</span>
+                      </span>
+                      <ArrowRight className="size-4 shrink-0 text-ink-muted transition-[color,transform] group-hover:translate-x-0.5 group-hover:text-accent" aria-hidden />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </div>
+            <TrustStrip className="mt-9" />
           </div>
-        </div>
+
+          <Card variant="inverse" padding="none" className="self-start overflow-hidden lg:mt-2">
+            <div className="flex items-center justify-between gap-3 px-5 pb-3 pt-5">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-white/60">Kayıt açık</p>
+                <h2 className="mt-1 text-lg font-semibold tracking-tight">Yaklaşan dönemler</h2>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/80">
+                <span className="size-1.5 rounded-full bg-[#86efac]" aria-hidden /> Canlı kontenjan
+              </span>
+            </div>
+            {cohorts.length > 0 ? (
+              <ul className="flex flex-col px-2.5">
+                {cohorts.map((cohort) => (
+                  <li key={cohort.id} className="border-t border-white/10 first:border-t-0">
+                    <CohortMiniRow cohort={cohort} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="mx-5 rounded-xl bg-white/5 px-4 py-6 text-sm text-white/70">
+                <CalendarDays className="mb-2 size-5 text-white/60" aria-hidden />
+                Yeni dönemler yakında açılıyor. Beklemek istemezsen birebir ders iste.
+              </div>
+            )}
+            <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/10 px-5 py-4">
+              <p className="text-xs text-white/60">Fiyatlar kişi başı, bilgi amaçlıdır.</p>
+              <Link href="/programlar#donemler" className="inline-flex items-center gap-1 text-sm font-semibold text-accent-glow hover:text-white">
+                Tüm dönemler <ArrowRight className="size-4" aria-hidden />
+              </Link>
+            </div>
+          </Card>
+        </Container>
       </section>
 
-      <PublicUpcomingClassesHero classes={upcomingClasses} />
+      {/* PROGRAMLAR */}
+      {programs.length > 0 && (
+        <Section aria-labelledby="programlar-baslik">
+          <Container>
+            <SectionIntro
+              id="programlar-baslik"
+              eyebrow="Programlar"
+              title={
+                <>
+                  Ertesi gün işinde <Accent>kullanacağın</Accent> beceriler
+                </>
+              }
+              description="Her programın müfredatı, dönem tarihleri ve fiyatı açık. Grup dönemine katıl, birebir çalış ya da ekibinle öğren."
+              action={
+                <Button asChild variant="outline">
+                  <Link href="/programlar">
+                    Tüm programlar <ArrowRight />
+                  </Link>
+                </Button>
+              }
+            />
+            <ul className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {programs.map((summary) => (
+                <li key={summary.program.id} className="min-w-0">
+                  <ProgramCard summary={summary} />
+                </li>
+              ))}
+            </ul>
+          </Container>
+        </Section>
+      )}
 
-      <ValuePropositionSection />
+      {/* NASIL İŞLER */}
+      <Section className="border-y border-line bg-canvas" aria-labelledby="surec-baslik">
+        <Container>
+          <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,440px)] lg:items-center">
+            <div className="min-w-0">
+              <SectionIntro
+                id="surec-baslik"
+                eyebrow="Nasıl işler"
+                title={
+                  <>
+                    Her adım panelinde, <Accent>yazılı</Accent>
+                  </>
+                }
+                description="Talebin, teklifin, mesajların ve dosyaların tek bir sayfada. Telefon trafiği yok, “ne oldu?” diye sormana gerek yok."
+              />
+              <Pipeline vertical className="mt-10" />
+            </div>
+            <figure className="min-w-0">
+              <Card padding="none" className="overflow-hidden shadow-raise">
+                <div className="flex items-center justify-between gap-3 border-b border-line px-5 py-4">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-soft">Talep</p>
+                    <p className="truncate font-semibold">Tez düzenleme · 142 sayfa</p>
+                  </div>
+                  <Badge tone="amber" dot>
+                    Teklif hazır
+                  </Badge>
+                </div>
+                <div className="px-3 py-6 sm:px-5">
+                  <StatusTrack steps={["Alındı", "Teklif", "Onay", "Devam", "Teslim"]} current={1} />
+                </div>
+                <dl className="grid grid-cols-2 gap-4 border-t border-line bg-surface/60 px-5 py-4 text-sm">
+                  <div>
+                    <dt className="text-xs text-ink-soft">Teklif</dt>
+                    <dd className="tabular font-mono text-base text-ink">₺9.500</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-ink-soft">Teslim</dt>
+                    <dd className="tabular font-mono text-base text-ink">5 iş günü</dd>
+                  </div>
+                </dl>
+              </Card>
+              <figcaption className="mt-3 text-center text-xs text-ink-soft">Örnek: talebin panelinde böyle görünür.</figcaption>
+            </figure>
+          </div>
+        </Container>
+      </Section>
 
-      <TrustStrip
-        items={[
-          { icon: ShieldCheck, title: "Uzman ekip", subtitle: "Akademik + kurumsal deneyim" },
-          { icon: Clock, title: "Esnek program", subtitle: "Sana uyan saatler" },
-          { icon: Sparkles, title: "Şeffaf süreç", subtitle: "Panelden anlık takip" },
-          { icon: GraduationCap, title: "Somut çıktı", subtitle: "Ertesi gün işinde kullan" },
-        ]}
-      />
+      {/* HİZMETLER */}
+      <Section aria-labelledby="hizmetler-baslik">
+        <Container>
+          <SectionIntro
+            id="hizmetler-baslik"
+            eyebrow="Hizmetler"
+            title={
+              <>
+                Akademik işin <Accent>zor</Accent> kısmını bize bırak
+              </>
+            }
+            description="Kapsamı sen anlat, net teklifi biz yazalım. Onaylamadan hiçbir iş başlamaz."
+          />
+          <ul className="mt-10 grid gap-4 md:grid-cols-3">
+            {services.map((service) => (
+              <li key={service.href} className="min-w-0">
+                <Link
+                  href={service.href}
+                  className="group flex h-full flex-col rounded-3xl border border-line bg-paper p-6 shadow-card transition-[box-shadow,border-color,transform] hover:-translate-y-0.5 hover:border-line-strong hover:shadow-raise"
+                >
+                  <div className="flex items-center justify-between">
+                    <Eyebrow>{service.eyebrow}</Eyebrow>
+                    <ArrowUpRight className="size-5 text-ink-muted transition-colors group-hover:text-accent" aria-hidden />
+                  </div>
+                  <h3 className="mt-4 text-xl font-semibold tracking-[-0.02em]">{service.title}</h3>
+                  <ul className="mt-5 flex flex-col gap-2.5 border-t border-line pt-5 text-sm text-ink-soft">
+                    {service.points.map((point) => (
+                      <li key={point} className="flex gap-2.5">
+                        <span className="mt-2 size-1 shrink-0 rounded-full bg-accent" aria-hidden />
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                  <span className="mt-auto pt-6 text-sm font-semibold text-accent">Nasıl çalıştığını gör</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </Section>
 
-      <StatBand
-        stats={[
-          { value: 15, label: "Yıllık Eğitim Deneyimi" },
-          { value: 10000, suffix: "+", label: "Eğitim Verilen Katılımcı" },
-          { value: 150, label: "Kurumsal İş Birliği" },
-        ]}
-        title="Rakamlarla Axis Akademi"
-        description="Kurumsal eğitim ve akademik destek alanında birikmiş deneyim."
-      />
+      {/* YORUMLAR */}
+      {reviews.length > 0 && (
+        <Section className="border-t border-line bg-canvas" aria-labelledby="yorumlar-baslik">
+          <Container>
+            <SectionIntro
+              id="yorumlar-baslik"
+              eyebrow="Katılımcılar"
+              title={
+                <>
+                  Programı bitirenler <Accent>anlatıyor</Accent>
+                </>
+              }
+              description="Yalnızca dönemini tamamlamış katılımcıların yorumları yayınlanır."
+            />
+            <ReviewList reviews={reviews} className="mt-10" />
+          </Container>
+        </Section>
+      )}
 
-      <ProcessTimeline steps={steps} title="Nasıl çalışır?" />
+      {/* SSS */}
+      <Section aria-labelledby="sss-baslik">
+        <Container className="grid gap-10 lg:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
+          <SectionIntro
+            id="sss-baslik"
+            eyebrow="Sık sorulanlar"
+            title="Aklına takılanlar"
+            description="Ödeme, kayıt, bekleme listesi ve belge hakkında kısa yanıtlar."
+            action={
+              <Button asChild variant="link">
+                <Link href="/sss">Tüm sorular</Link>
+              </Button>
+            }
+            className="sm:flex-col sm:items-start lg:sticky lg:top-24 lg:self-start"
+          />
+          <FaqList items={faq.items.slice(0, 4)} />
+        </Container>
+      </Section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-        <Reveal>
-          <div className="rounded-2xl bg-ink px-8 py-12 text-center text-white md:px-16">
-            <h2 className="font-display text-2xl font-bold tracking-tight md:text-3xl">
-              Açık sınıflar ve paket detayları üyelere açık
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-white/70">
-              Ücretsiz kayıt ol; yaklaşan eğitimleri, paket müfredatlarını ve sana özel modül seçeneklerini panelinden gör.
-            </p>
-            <Link
-              href="/kayit"
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-amber px-6 py-3 font-semibold text-ink transition-all hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]"
-            >
-              Ücretsiz Kayıt Ol <ArrowRight className="size-4" aria-hidden />
+      {/* KAPANIŞ */}
+      <Container className="pb-16 sm:pb-24">
+        <CtaBand
+          eyebrow="Başlamak ücretsiz"
+          title={
+            <>
+              Hesabını aç, ilk adımı <Accent>bugün</Accent> at
+            </>
+          }
+          description="Kayıt olmak ücretsiz ve bir dakika sürer. Başvurularını, tekliflerini ve belgelerini tek panelden izlersin."
+        >
+          <Button asChild size="lg" variant="secondary">
+            <Link href="/kayit">
+              Ücretsiz kayıt ol <ArrowRight />
             </Link>
-          </div>
-        </Reveal>
-      </section>
+          </Button>
+          <Button asChild size="lg" variant="outline">
+            <Link href="/iletisim">Soru sor</Link>
+          </Button>
+        </CtaBand>
+      </Container>
     </>
   );
 }

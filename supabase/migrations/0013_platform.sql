@@ -1258,3 +1258,15 @@ create policy "class_materials_storage_delete_instructor" on storage.objects
     bucket_id = 'class-materials'
     and public.is_class_instructor(((storage.foldername(name))[1])::uuid)
   );
+
+-- ============================================================
+-- 17. ESKİ VARSAYILAN METİNLER: admin değiştirmediyse silinir, koddaki yeni varsayılanlar görünür
+-- ============================================================
+delete from public.site_content where page_key = 'home' and section_key = 'hero'
+  and content_json->>'title' = 'Akademik işlerinizde net, profesyonel ve güvenilir destek';
+delete from public.site_content where page_key = 'analysis' and section_key = 'intro'
+  and content_json->>'body' like '%Talep oluşturmak için ücretsiz üye olun%';
+delete from public.site_content where page_key = 'thesis' and section_key = 'intro'
+  and content_json->>'body' like '%Üye olup talebinizi dosyanızla birlikte iletin%';
+delete from public.site_content where page_key = 'education' and section_key = 'intro'
+  and content_json->>'description' like '%öğrenme şeklini sen seç%';

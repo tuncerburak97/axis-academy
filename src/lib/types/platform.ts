@@ -118,7 +118,8 @@ export const requestDetailLabels: Record<string, string> = {
   format: "Eğitim şekli",
   field: "Çalışma alanı",
   level: "Seviye",
-  preferred_days: "Tercih edilen günler",
+  preferred_days: "Tercih edilen günler / tarihler",
+  needs: "İstenen düzenlemeler",
 };
 
 export const analysisMethodLabels: Record<string, string> = {

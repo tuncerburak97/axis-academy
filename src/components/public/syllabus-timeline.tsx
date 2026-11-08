@@ -1,109 +1,41 @@
-// src/components/public/syllabus-timeline.tsx — public haftalık müfredat vitrini (modül veya paket)
-"use client";
+// src/components/public/syllabus-timeline.tsx — hafta hafta müfredat zaman çizelgesi (program ve paket müfredatı)
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-import { BookOpen, CheckCircle2 } from "lucide-react";
-import { Reveal } from "@/components/public/motion-primitives";
-import { weekKindLabels } from "@/lib/types/catalog";
-import type { BundleSyllabusWeek, SyllabusWeek } from "@/lib/types/catalog";
-
-type TimelineWeek = SyllabusWeek | BundleSyllabusWeek;
-
-function isBundleWeek(week: TimelineWeek): week is BundleSyllabusWeek {
-  return "week_kind" in week;
+export interface TimelineWeek {
+  id: string;
+  week_number: number;
+  title: string;
+  description: string;
+  week_kind?: string;
 }
 
-interface SyllabusTimelineProps {
-  weeks: TimelineWeek[];
-  title?: string;
-  description?: string;
-  showWeekKind?: boolean;
-  /** Karşılaştırma bölümü içinde: dış section/padding atlanır */
-  embedded?: boolean;
-}
-
-export function SyllabusTimeline({
-  weeks,
-  title = "Haftalık Müfredat",
-  description = "Hafta hafta ne öğreneceğinizi net biçimde görün — program yoğun ve uygulamalıdır.",
-  showWeekKind = false,
-  embedded = false,
-}: SyllabusTimelineProps) {
+export function SyllabusTimeline({ weeks, compact = false, className }: { weeks: TimelineWeek[]; compact?: boolean; className?: string }) {
   if (weeks.length === 0) return null;
-
-  const content = (
-    <>
-      {!embedded && (
-        <Reveal>
-          <div className="text-center">
-            <p className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold tracking-wide text-accent">
-              <BookOpen className="size-3.5" aria-hidden />
-              {weeks.length} haftalık program
-            </p>
-            <h2 id="syllabus-heading" className="mt-4 font-display text-2xl font-bold tracking-tight sm:text-3xl">
-              {title}
-            </h2>
-            <p className="mx-auto mt-2 max-w-xl text-ink-soft">{description}</p>
-          </div>
-        </Reveal>
-      )}
-
-      {embedded && (
-        <div className="mb-8 text-center">
-          <h3 className="font-display text-xl font-bold tracking-tight sm:text-2xl">{title}</h3>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-ink-soft">{description}</p>
-        </div>
-      )}
-
-      <ol className={`relative space-y-0 ${embedded ? "mt-0" : "mt-12"}`}>
-        <span
-          className="absolute bottom-4 left-[1.35rem] top-4 w-0.5 bg-gradient-to-b from-accent via-accent/40 to-line sm:left-6"
-          aria-hidden
-        />
-        {weeks.map((week, index) => (
-          <Reveal key={week.id} delay={index * 0.06}>
-            <li className="relative flex gap-4 pb-10 last:pb-0 sm:gap-6">
-              <span
-                className={`relative z-10 flex size-11 shrink-0 items-center justify-center rounded-2xl font-display text-sm font-bold text-white shadow-md sm:size-12 ${
-                  isBundleWeek(week) && week.week_kind === "specialized" ? "bg-amber" : "bg-accent"
-                }`}
-              >
-                {week.week_number}
-              </span>
-              <div className="min-w-0 flex-1 rounded-2xl border border-line bg-white p-5 shadow-sm transition-shadow duration-300 hover:shadow-md">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <h3 className="font-display text-lg font-semibold">{week.title}</h3>
-                  {showWeekKind && isBundleWeek(week) && (
-                    <span
-                      className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        week.week_kind === "core"
-                          ? "bg-accent-soft text-accent"
-                          : "bg-amber-soft text-amber-900"
-                      }`}
-                    >
-                      {weekKindLabels[week.week_kind]}
-                    </span>
-                  )}
-                </div>
-                {week.description && (
-                  <p className="mt-2 text-sm leading-relaxed text-ink-soft">{week.description}</p>
-                )}
-                <p className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-accent">
-                  <CheckCircle2 className="size-3.5" aria-hidden />
-                  Hafta {week.week_number} kazanımı
-                </p>
-              </div>
-            </li>
-          </Reveal>
-        ))}
-      </ol>
-    </>
-  );
-
-  if (embedded) return <div>{content}</div>;
-
   return (
-    <section aria-labelledby="syllabus-heading" className="border-t border-line bg-surface py-16 md:py-20">
-      <div className="mx-auto max-w-3xl px-3 sm:px-6">{content}</div>
-    </section>
+    <ol className={cn("relative flex flex-col", className)}>
+      {weeks.map((week, index) => (
+        <li key={week.id} className="relative grid grid-cols-[48px_minmax(0,1fr)] gap-4 pb-6 last:pb-0">
+          {index < weeks.length - 1 && <span aria-hidden className="absolute bottom-0 left-6 top-11 w-px bg-line-strong" />}
+          <span className="relative flex h-11 flex-col items-center justify-center rounded-xl bg-surface ring-1 ring-inset ring-line">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.08em] text-ink-soft">Hafta</span>
+            <span className="tabular font-mono text-sm font-medium leading-none text-ink">{String(week.week_number).padStart(2, "0")}</span>
+          </span>
+          <div className={cn("min-w-0 pt-1", !compact && "pb-1")}>
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="font-semibold leading-snug tracking-tight text-ink">{week.title}</h3>
+              {week.week_kind === "specialized" && (
+                <Badge size="sm" tone="accent">
+                  Pakete özel
+                </Badge>
+              )}
+            </div>
+            {week.description && (
+              <p className={cn("mt-1 whitespace-pre-line text-sm leading-relaxed text-ink-soft", compact && "line-clamp-3")}>{week.description}</p>
+            )}
+          </div>
+        </li>
+      ))}
+    </ol>
   );
 }

@@ -1,59 +1,78 @@
-// src/app/(public)/tez-duzenleme/page.tsx — Tez düzenleme: BentoGrid + FeatureCard bileşenleri
+// src/app/(public)/tez-duzenleme/page.tsx — tez düzenleme hizmeti: kapsam, süreç, teslim edilenler, SSS → /teklif/tez
 import type { Metadata } from "next";
-import Link from "next/link";
-import Image from "next/image";
-import { FileCheck2, ListChecks, BookMarked, Ruler } from "lucide-react";
-import { PageIntro } from "@/components/public/page-intro";
+import { BookMarked, FileCheck2, Images, ListOrdered, Ruler, Quote } from "lucide-react";
 import { getContent } from "@/lib/queries/content";
 import { defaultThesisIntro, type ServiceIntroContent } from "@/lib/types/content";
-import { siteImages } from "@/lib/images";
-import { Reveal } from "@/components/public/motion-primitives";
-import { BentoCell, BentoGrid, FeatureCard } from "@/components/public/marketing";
+import { Card } from "@/components/ui/card";
+import { Eyebrow } from "@/components/ui/page-header";
+import { ServiceLanding } from "@/components/public/service-landing";
 
-export const metadata: Metadata = { title: "Tez Düzenleme" };
+export const metadata: Metadata = {
+  title: "Tez Düzenleme",
+  description: "Tezini enstitü yazım kılavuzuna uygun, teslime hazır hâle getiriyoruz: biçim, kaynakça, içindekiler, tablo ve şekil listeleri.",
+  alternates: { canonical: "/tez-duzenleme" },
+};
 
-const highlights = [
-  { icon: Ruler, title: "Şablon uyumu", description: "Enstitü kılavuzuna göre sayfa düzeni, başlık ve numaralandırma." },
-  { icon: BookMarked, title: "Kaynakça düzeni", description: "APA/IEEE gibi stillere uygun atıf ve kaynakça denetimi." },
-  { icon: ListChecks, title: "Son kontrol listesi", description: "Teslim öncesi biçimsel eksiklerin tamamının giderilmesi." },
+const offers = [
+  { icon: Ruler, title: "Sayfa düzeni ve biçim", description: "Kenar boşlukları, yazı tipi, satır aralığı ve sayfa numaraları kılavuza birebir uyar." },
+  { icon: ListOrdered, title: "Otomatik içindekiler", description: "Başlık stilleri kurulur; içindekiler, tablo ve şekil listeleri tek tıkla güncellenir." },
+  { icon: Quote, title: "Kaynakça ve atıflar", description: "APA, IEEE, Chicago, Vancouver ya da enstitünün stili; metin içi atıflarla eşleşme kontrolü." },
+  { icon: Images, title: "Tablo ve şekiller", description: "Numaralandırma, başlık konumu ve çapraz başvurular düzenlenir." },
+  { icon: BookMarked, title: "Enstitü şablonu", description: "Kapak, onay sayfası, özet/abstract ve ön sayfalar şablona taşınır." },
+  { icon: FileCheck2, title: "Son kontrol", description: "Teslim öncesi kılavuz maddelerine göre tek tek kontrol listesi." },
 ];
 
-export default async function ThesisEditingPage() {
+const deliverables = [
+  "Düzenlenmiş Word dosyası (stiller kurulu, kendin de güncelleyebilirsin)",
+  "PDF çıktısı",
+  "Kılavuza uyum kontrol listesi",
+  "Kaynakça–atıf eşleşme raporu",
+  "Enstitü geri bildirimine göre düzeltme",
+];
+
+const faq = [
+  { question: "Tezimin içeriğine dokunuyor musunuz?", answer: "Hayır. Yalnızca biçim, düzen ve kaynakça üzerinde çalışırız; bilimsel içerik ve ifadeler sana aittir." },
+  { question: "Fiyat neye göre belirleniyor?", answer: "Sayfa sayısı, kaynakça büyüklüğü ve tablo/şekil yoğunluğuna göre. Formda bunları belirtirsen teklif daha hızlı ve net olur." },
+  { question: "Ne kadar sürede teslim ediyorsunuz?", answer: "Süre sayfa sayısına ve kapsamına göre değişir. Teslim tarihini formda yazarsan teklifi o takvime göre hazırlarız." },
+  { question: "Enstitü düzeltme isterse ne oluyor?", answer: "Geri bildirimi talep sayfana mesaj olarak yazman yeterli. Düzeltmelerin kapsamı teklifte yazılı olarak belirtilir." },
+  { question: "Ödemeyi nasıl yapıyorum?", answer: "Sitede ödeme alınmaz. Teklifi onayladıktan sonra ödeme ayrıntılarını ekibimizle konuşursun." },
+];
+
+export default async function ThesisPage() {
   const intro = await getContent<ServiceIntroContent>("thesis", "intro", defaultThesisIntro);
-
   return (
-    <>
-      <PageIntro eyebrow="Hizmet" title={intro.title} description={intro.description} />
-      <section className="mx-auto max-w-6xl px-3 py-16 sm:px-6">
-        <div className="grid items-start gap-12 md:grid-cols-2">
-          <Reveal>
-            <p className="max-w-2xl whitespace-pre-wrap text-ink-soft">{intro.body}</p>
-            <Link
-              href="/kayit"
-              className="mt-8 inline-flex items-center gap-2 rounded-xl bg-accent px-6 py-3 font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-md active:scale-[0.98]"
-            >
-              <FileCheck2 className="size-4" aria-hidden /> Kayıt Ol ve Talep Oluştur
-            </Link>
-          </Reveal>
-          <Reveal delay={0.15} className="hidden md:block">
-            <Image
-              src={siteImages.thesis}
-              alt="Dolma kalemle yazılmış el yazısı notlar"
-              width={640}
-              height={460}
-              className="h-96 w-full rounded-2xl object-cover shadow-lg"
-            />
-          </Reveal>
-        </div>
-
-        <BentoGrid className="mt-12">
-          {highlights.map((item, index) => (
-            <BentoCell key={item.title} delay={index * 0.1}>
-              <FeatureCard icon={item.icon} title={item.title} description={item.description} variant="compact" />
-            </BentoCell>
-          ))}
-        </BentoGrid>
-      </section>
-    </>
+    <ServiceLanding
+      path="/tez-duzenleme"
+      eyebrow="Tez düzenleme"
+      intro={intro}
+      ctaHref="/teklif/tez"
+      ctaLabel="Tez teklifi al"
+      offers={offers}
+      deliverables={deliverables}
+      deliverablesNote="Teslim dosyaların panelindeki Belgelerim bölümünde durur."
+      faq={faq}
+      aside={
+        <Card padding="lg" className="shadow-raise">
+          <Eyebrow>Teklif için gerekenler</Eyebrow>
+          <dl className="mt-4 divide-y divide-line text-sm">
+            {[
+              ["Derece", "Yüksek lisans / doktora"],
+              ["Enstitü", "Kılavuz buna göre seçilir"],
+              ["Sayfa sayısı", "Yaklaşık değer yeterli"],
+              ["Kaynakça stili", "APA 7, IEEE, Chicago…"],
+              ["Teslim tarihi", "Enstitü son günü"],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-baseline justify-between gap-4 py-2.5">
+                <dt className="font-semibold text-ink">{label}</dt>
+                <dd className="text-right text-ink-soft">{value}</dd>
+              </div>
+            ))}
+          </dl>
+          <p className="mt-4 border-t border-line pt-4 text-sm text-ink-soft">
+            Tez dosyanı ve enstitü kılavuzunu ekleyebilirsin (en fazla <span className="tabular font-mono">20 MB</span>).
+          </p>
+        </Card>
+      }
+    />
   );
 }

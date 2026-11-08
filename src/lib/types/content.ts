@@ -27,42 +27,58 @@ export interface FaqContent {
 }
 
 export const defaultHero: HeroContent = {
-  title: "Akademik işlerinizde net, profesyonel ve güvenilir destek",
+  title: "Excel'den teze, işini bitiren akademik destek",
   subtitle:
-    "İhtiyacınız analiz, ofis programları eğitimi ya da tez düzenleme olsun — süreci sadeleştirir, sonucu garantiye alırız. Ücretsiz kayıt olun, detayları panelinizden takip edin.",
+    "Grup dönemleri, birebir dersler, analiz ve tez düzenleme. Fiyatı ve tarihi önden gör, başvurunu panelinden adım adım takip et.",
 };
 
 export const defaultAnalysisIntro: ServiceIntroContent = {
   title: "Bibliyometrik & İstatistiksel Analiz",
-  description: "Araştırma verinizi uzman ellere bırakın; yöntem seçimi, analiz ve raporlama uçtan uca bizde.",
-  body: "Analiz talepleri projeye özel değerlendirilir ve fiyatlandırılır. Talep oluşturmak için ücretsiz üye olun; ekibimiz sizinle doğrudan iletişime geçsin.",
+  description: "Verini uzman ekibe bırak; yöntem seçimi, analiz ve raporlama uçtan uca bizde.",
+  body: "Her analiz projeye özel değerlendirilir. Kısa formu doldur, dosyanı ekle; ekibimiz inceleyip panelinde net bir teklif sunsun.",
 };
 
 export const defaultThesisIntro: ServiceIntroContent = {
   title: "Tez Düzenleme",
-  description: "Teziniz; biçim, kaynakça ve enstitü şablon kurallarına uygun, teslime hazır hâle getirilir.",
-  body: "Tez düzenleme talepleri projeye özel değerlendirilir. Üye olup talebinizi dosyanızla birlikte iletin; size net bir teklifle dönelim.",
+  description: "Tezin; biçim, kaynakça ve enstitü şablon kurallarına uygun, teslime hazır hâle gelir.",
+  body: "Tezini ve enstitü yönergeni gönder; sayfa sayısı ve ihtiyaca göre net bir teklifle dönelim. Onaylarsan süreç başlar, her adımı panelinden izlersin.",
+};
+
+export const defaultCorporateIntro: ServiceIntroContent = {
+  title: "Kurumsal Eğitim",
+  description: "Ekibine özel Excel, Word ve PowerPoint programları; online, yerinde ya da karma.",
+  body: "Ekibinin seviyesine ve iş senaryolarına göre program kurgularız. Kişi sayısına göre fiyat aralıkları program sayfalarında açıkça yazar.",
 };
 
 export const defaultEducationIntro: EducationIntroContent = {
-  title: "Ofis Programları Eğitimleri",
-  description: "Hazır paketler, sana özel modüller ya da sınıf eğitimleri — öğrenme şeklini sen seç.",
+  title: "Excel, Word ve PowerPoint programları",
+  description: "Grup dönemine katıl, birebir çalış ya da ekibinle öğren. Tarih, kontenjan ve fiyat önden belli.",
 };
 
 export const defaultFaq: FaqContent = {
   items: [
     {
       question: "Ödeme site üzerinden mi yapılıyor?",
-      answer: "Hayır. Paket ve hizmet detayları üye panelinde görünür; ödeme süreci ekibimizle doğrudan konuşulur.",
+      answer: "Hayır. Fiyatlar sitede açıkça yazar; ödeme ekibimizle doğrudan konuşulur.",
     },
     {
-      question: "Eğitim detaylarını neden göremiyorum?",
+      question: "Bir döneme nasıl kayıt olurum?",
       answer:
-        "Açık sınıflar, paket müfredatları ve katılım seçenekleri üyelere açıktır. Ücretsiz kayıt olduktan sonra tüm detayları panelinizden görebilirsiniz.",
+        'Program sayfasından dönemi seçip "Yerimi ayır" demen yeterli. Başvurun onaylanınca e-posta ve panel bildirimi alırsın.',
+    },
+    {
+      question: "Dönem doluysa ne olur?",
+      answer: "Bekleme listesine katılırsın. Yer açılır açılmaz sana haber veririz.",
     },
     {
       question: "Analiz ve tez talepleri nasıl işliyor?",
-      answer: "Talebinizi panelinizden iletirsiniz; ekibimiz inceleyip size özel teklif ve planlama ile döner.",
+      answer:
+        "Kısa bir formla ihtiyacını anlatırsın, dosyanı eklersin. Ekibimiz inceleyip panelinde teklif sunar; onaylarsan süreç başlar ve her adımı panelinden izlersin.",
+    },
+    {
+      question: "Eğitim sonunda belge alıyor muyum?",
+      answer:
+        "Evet. Dönemi tamamlayan herkes doğrulama kodlu bir katılım belgesi alır; belge panelindeki Belgelerim bölümünde durur.",
     },
   ],
 };

@@ -1,37 +1,40 @@
-// src/components/public/site-footer.tsx — public site alt bilgi alanı
+// src/components/public/site-footer.tsx — public alt bilgi: kısa tanım, site haritası sütunları, telif
 import Link from "next/link";
+import { footerNavGroups } from "@/lib/navigation";
+import { Logo } from "@/components/public/site-header";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-line bg-surface">
-      <div className="mx-auto grid max-w-6xl gap-8 px-3 py-12 sm:px-6 md:grid-cols-3">
-        <div>
-          <p className="font-display text-lg font-bold">
-            Axis<span className="text-accent"> Akademi</span>
-          </p>
-          <p className="mt-2 max-w-xs text-sm text-ink-soft">
-            Analiz, eğitim ve tez düzenleme hizmetlerinde net, profesyonel ve güvenilir çözüm ortağınız.
+    <footer className="border-t border-line bg-canvas">
+      <div className="mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.3fr_repeat(3,1fr)]">
+        <div className="max-w-xs">
+          <Link href="/" className="text-lg text-ink">
+            <Logo />
+          </Link>
+          <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+            Excel, Word ve PowerPoint programları; bibliyometrik ve istatistiksel analiz; tez düzenleme. Fiyat ve tarih önden belli, süreç panelinde.
           </p>
         </div>
-        <nav aria-label="Hizmetler" className="text-sm">
-          <p className="font-semibold">Hizmetler</p>
-          <ul className="mt-3 space-y-1 text-ink-soft">
-            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/analiz">Bibliyometrik &amp; İstatistiksel Analiz</Link></li>
-            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/egitim">Excel / Word / PowerPoint Eğitimleri</Link></li>
-            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/tez-duzenleme">Tez Düzenleme</Link></li>
-          </ul>
-        </nav>
-        <nav aria-label="Kurumsal" className="text-sm">
-          <p className="font-semibold">Kurumsal</p>
-          <ul className="mt-3 space-y-1 text-ink-soft">
-            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/hakkimizda">Hakkımızda</Link></li>
-            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/sss">Sıkça Sorulan Sorular</Link></li>
-            <li><Link className="inline-flex min-h-11 items-center hover:text-ink" href="/iletisim">İletişim</Link></li>
-          </ul>
-        </nav>
+        {footerNavGroups.map((group) => (
+          <nav key={group.title} aria-label={group.title} className="text-sm">
+            <p className="font-semibold text-ink">{group.title}</p>
+            <ul className="mt-3 flex flex-col">
+              {group.links.map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="inline-flex min-h-10 items-center text-ink-soft transition-colors hover:text-ink">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ))}
       </div>
-      <div className="border-t border-line py-4 text-center text-xs text-ink-soft">
-        © {new Date().getFullYear()} Axis Akademi. Tüm hakları saklıdır.
+      <div className="border-t border-line">
+        <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-5 text-xs text-ink-soft sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p>© {new Date().getFullYear()} Axis Akademi. Tüm hakları saklıdır.</p>
+          <p>Ödemeler platform dışında, ekibimizle doğrudan yapılır.</p>
+        </div>
       </div>
     </footer>
   );
