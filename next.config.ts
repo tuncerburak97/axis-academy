@@ -25,6 +25,7 @@ const nextConfig: NextConfig = {
       { source: "/admin/moduller/:id", destination: "/admin/programlar/:id", permanent: true },
       { source: "/admin/siniflar", destination: "/admin/donemler", permanent: true },
       { source: "/admin/siniflar/:id", destination: "/admin/donemler/:id", permanent: true },
+      { source: "/admin/kullanicilar", destination: "/admin/kisiler", permanent: true },
     ];
   },
 };

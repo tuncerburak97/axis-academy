@@ -1,97 +1,68 @@
-// src/lib/actions/admin-content.ts — site_content bölüm güncelleme Server Action'ları
+// src/lib/actions/admin-content.ts — site_content düzenleyicisi: anasayfa, hizmet tanıtımları, program girişi, SSS listesi
 "use server";
 
-import { z } from "zod";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import type { Json } from "@/lib/supabase/database.types";
 import { requireAdmin } from "@/lib/actions/admin-guard";
+import { logAudit } from "@/lib/audit";
+import type { ActionState } from "@/components/admin/lib/action-state";
+import { fail, ok, revalidateAdmin, str } from "@/lib/actions/admin-utils";
 
-// Bölüm anahtarına göre hangi public path'lerin tazeleneceği
-const revalidateTargets: Record<string, string[]> = {
-  "home/hero": ["/"],
-  "analysis/intro": ["/analiz"],
-  "thesis/intro": ["/tez-duzenleme"],
-  "education/intro": ["/egitim"],
-  "faq/items": ["/sss"],
+/** Düzenlenebilir bölümler ve alanları (alan: [en az, en çok] karakter) */
+const SECTIONS: Record<string, { label: string; fields: Record<string, [number, number]>; paths: string[] }> = {
+  "home/hero": { label: "Anasayfa girişi", fields: { title: [5, 200], subtitle: [5, 500] }, paths: ["/"] },
+  "analysis/intro": { label: "Analiz sayfası", fields: { title: [3, 150], description: [5, 500], body: [5, 2000] }, paths: ["/analiz"] },
+  "thesis/intro": { label: "Tez düzenleme sayfası", fields: { title: [3, 150], description: [5, 500], body: [5, 2000] }, paths: ["/tez-duzenleme"] },
+  "corporate/intro": { label: "Kurumsal sayfası", fields: { title: [3, 150], description: [5, 500], body: [5, 2000] }, paths: ["/kurumsal"] },
+  "education/intro": { label: "Program kataloğu girişi", fields: { title: [3, 150], description: [5, 500] }, paths: ["/programlar"] },
 };
 
-async function upsertContent(pageKey: string, sectionKey: string, contentJson: unknown): Promise<void> {
-  const { supabase } = await requireAdmin();
+async function upsert(pageKey: string, sectionKey: string, content: unknown, label: string, paths: string[]): Promise<ActionState> {
+  const { supabase, user } = await requireAdmin();
+  const { error } = await supabase.from("site_content").upsert({
+    page_key: pageKey,
+    section_key: sectionKey,
+    content_json: content as NonNullable<Json>,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) return fail("İçerik kaydedilemedi. Tekrar dene.");
+  await logAudit(supabase, user.id, "content.update", "site_content", `${pageKey}/${sectionKey}`, `${label} güncellendi`);
+  for (const path of paths) revalidatePath(path);
+  revalidateAdmin();
+  return ok(`${label} kaydedildi`);
+}
 
-  const { error } = await supabase
-    .from("site_content")
-    .upsert({ page_key: pageKey, section_key: sectionKey, content_json: (contentJson ?? {}) as NonNullable<Json>, updated_at: new Date().toISOString() });
-  if (error) redirect("/admin/icerik?error=db");
-
-  for (const path of revalidateTargets[`${pageKey}/${sectionKey}`] ?? []) {
-    revalidatePath(path);
+export async function saveContentSection(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const key = str(formData, "section");
+  const section = SECTIONS[key];
+  if (!section) return fail("Bölüm bulunamadı.");
+  const content: Record<string, string> = {};
+  for (const [field, [min, max]] of Object.entries(section.fields)) {
+    const value = str(formData, field);
+    if (value.length < min || value.length > max) return fail(`Alan uzunluğu ${min}–${max} karakter olmalı (${field}).`);
+    content[field] = value;
   }
-  revalidatePath("/admin/icerik");
-  redirect("/admin/icerik?saved=1");
+  const [pageKey, sectionKey] = key.split("/");
+  return upsert(pageKey, sectionKey, content, section.label, section.paths);
 }
 
-const heroSchema = z.object({
-  title: z.string().min(5).max(200),
-  subtitle: z.string().min(5).max(500),
-});
-
-export async function updateHero(formData: FormData): Promise<void> {
-  const parsed = heroSchema.safeParse({
-    title: formData.get("title"),
-    subtitle: formData.get("subtitle"),
-  });
-  if (!parsed.success) redirect("/admin/icerik?error=validation");
-  await upsertContent("home", "hero", parsed.data);
-}
-
-const serviceIntroSchema = z.object({
-  page_key: z.enum(["analysis", "thesis"]),
-  title: z.string().min(3).max(150),
-  description: z.string().min(5).max(500),
-  body: z.string().min(5).max(2000),
-});
-
-export async function updateServiceIntro(formData: FormData): Promise<void> {
-  const parsed = serviceIntroSchema.safeParse({
-    page_key: formData.get("page_key"),
-    title: formData.get("title"),
-    description: formData.get("description"),
-    body: formData.get("body"),
-  });
-  if (!parsed.success) redirect("/admin/icerik?error=validation");
-
-  const { page_key, ...content } = parsed.data;
-  await upsertContent(page_key, "intro", content);
-}
-
-const educationIntroSchema = z.object({
-  title: z.string().min(3).max(150),
-  description: z.string().min(5).max(500),
-});
-
-export async function updateEducationIntro(formData: FormData): Promise<void> {
-  const parsed = educationIntroSchema.safeParse({
-    title: formData.get("title"),
-    description: formData.get("description"),
-  });
-  if (!parsed.success) redirect("/admin/icerik?error=validation");
-  await upsertContent("education", "intro", parsed.data);
-}
-
-// SSS: satır başına "Soru::Cevap" biçimindeki metni yapılandırılmış listeye çevirir
-export async function updateFaq(formData: FormData): Promise<void> {
-  const raw = String(formData.get("items") ?? "");
+/** SSS: sıralı soru-cevap listesi (JSON olarak gelir) */
+export async function saveFaq(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(str(formData, "items") || "[]");
+  } catch {
+    return fail("SSS listesi okunamadı. Sayfayı yenileyip tekrar dene.");
+  }
+  if (!Array.isArray(raw)) return fail("SSS listesi geçersiz.");
   const items = raw
-    .split("\n")
-    .map((line) => line.trim())
-    .filter((line) => line.includes("::"))
-    .map((line) => {
-      const [question, ...rest] = line.split("::");
-      return { question: question.trim(), answer: rest.join("::").trim() };
-    })
-    .filter((item) => item.question && item.answer);
-
-  if (items.length === 0) redirect("/admin/icerik?error=validation");
-  await upsertContent("faq", "items", { items });
+    .map((item) => ({
+      question: String((item as { question?: unknown })?.question ?? "").trim().slice(0, 300),
+      answer: String((item as { answer?: unknown })?.answer ?? "").trim().slice(0, 2000),
+    }))
+    .filter((item) => item.question || item.answer);
+  if (items.some((item) => !item.question || !item.answer)) return fail("Her sorunun hem başlığı hem cevabı olmalı.");
+  if (items.length === 0) return fail("En az bir soru ekle.");
+  if (items.length > 40) return fail("En fazla 40 soru eklenebilir.");
+  return upsert("faq", "items", { items }, "SSS", ["/sss", "/"]);
 }

@@ -1,28 +1,29 @@
-// src/app/(admin)/admin/(dashboard)/layout.tsx — admin koruması: admin olmayan herkes 404 görür
-import { notFound } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
+// src/app/(admin)/admin/(dashboard)/layout.tsx — admin koruması ve konsol iskeleti; admin olmayan herkes 404 görür
+import type { Metadata } from "next";
+import { requireAdminUser } from "@/lib/auth";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { getActiveRequestCount } from "@/lib/queries/admin-requests";
+import { getAdminNavCounts } from "@/lib/queries/admin-shell";
+import { getMyNotifications, getMyUnreadCount } from "@/lib/queries/notifications";
+
+export const metadata: Metadata = {
+  title: { default: "Konsol", template: "%s · Konsol | Axis Akademi" },
+  robots: { index: false, follow: false },
+};
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) notFound();
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("user_id", user.id)
-    .single();
-  if (profile?.role !== "admin") notFound();
-
-  const activeRequestCount = await getActiveRequestCount();
+  const user = await requireAdminUser();
+  const [counts, notifications, unreadCount] = await Promise.all([
+    getAdminNavCounts(),
+    getMyNotifications(12),
+    getMyUnreadCount(),
+  ]);
 
   return (
     <AdminShell
-      activeRequestCount={activeRequestCount}
-      logoutButton={<AdminLogoutButton />}
+      user={{ name: user.displayName, email: user.email }}
+      counts={counts}
+      notifications={notifications}
+      unreadCount={unreadCount}
     >
       {children}
     </AdminShell>

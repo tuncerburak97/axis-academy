@@ -1,326 +1,187 @@
-// src/app/(admin)/admin/(dashboard)/talepler/page.tsx — talep yönetimi:
-// analiz/tez ve bireysel eğitim talepleri, durum + not güncelleme, dosya indirme
+// src/app/(admin)/admin/(dashboard)/talepler/page.tsx — tüm talepler tek yerde: liste (masaüstü tablo / mobil kart) ve durum panosu
 import type { Metadata } from "next";
-import { Download } from "lucide-react";
-import { FilePreview } from "@/components/shared/file-preview";
-import { supportsPreview } from "@/lib/file-preview";
-import { createClient } from "@/lib/supabase/server";
-import { updateContactRequest, updateIndividualRequest, updateInquiry } from "@/lib/actions/admin-requests";
-import {
-  deleteContactRequest,
-  deleteIndividualRequest,
-  deleteInquiry,
-} from "@/lib/actions/admin-delete";
-import { ConfirmDeleteButton } from "@/components/admin/confirm-delete-button";
-import {
-  contactStatusLabels,
-  inquiryStatusLabels,
-  requestStatusLabels,
-  requestTypeLabels,
-  serviceTypeLabels,
-} from "@/lib/types/catalog";
-import type { ContactStatus, IndividualRequestType, InquiryStatus, RequestStatus } from "@/lib/types/catalog";
-import { SelectField, StatusBanner, SubmitButton, TextArea } from "@/components/admin/fields";
+import Link from "next/link";
+import { Suspense } from "react";
+import { ClipboardList } from "lucide-react";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/feedback";
+import { Avatar } from "@/components/ui/data";
+import { cn } from "@/lib/utils";
+import { formatDateShort, formatTRY } from "@/lib/format";
+import { requestStatusAdminLabels, type RequestStatus } from "@/lib/types/platform";
+import { getAdminRequests, getAdmins, type AdminRequestListItem } from "@/lib/queries/admin-requests";
+import { RequestFilters } from "@/components/admin/requests/request-filters";
+import { RequestStatusMenu } from "@/components/admin/requests/request-status-menu";
+import { AgeLabel, RequestKindBadge, RequestStatusBadge, isOverdue } from "@/components/admin/requests/bits";
 
-export const metadata: Metadata = { title: "Talep Yönetimi", robots: { index: false } };
-export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Talepler" };
 
-interface ContactRow {
-  id: string;
-  service_type: "analysis" | "thesis";
-  message: string;
-  file_path: string | null;
-  status: ContactStatus;
-  admin_notes: string;
-  created_at: string;
-  profiles: { full_name: string; email: string; phone: string | null } | null;
+const BOARD_COLUMNS: RequestStatus[] = ["received", "quoted", "approved", "planned", "in_progress", "completed"];
+
+type SearchParams = Promise<Record<string, string | undefined>>;
+
+function amountOf(item: AdminRequestListItem) {
+  const value = item.quote_amount ?? item.price_estimate;
+  return value ? formatTRY(value) : "";
 }
 
-interface IndividualRow {
-  id: string;
-  request_type: IndividualRequestType;
-  total_hours: number | null;
-  calculated_price: number;
-  status: RequestStatus;
-  progress_note: string;
-  admin_notes: string;
-  user_message: string;
-  created_at: string;
-  profiles: { full_name: string; email: string; phone: string | null } | null;
-  education_modules: { title: string } | null;
-  bundle_packages: { title: string } | null;
-}
-
-interface InquiryRow {
-  id: string;
-  name: string;
-  email: string;
-  message: string;
-  status: InquiryStatus;
-  admin_notes: string;
-  created_at: string;
-}
-
-const contactStatusOptions = Object.entries(contactStatusLabels).map(([value, label]) => ({ value, label }));
-const requestStatusOptions = Object.entries(requestStatusLabels).map(([value, label]) => ({ value, label }));
-const inquiryStatusOptions = Object.entries(inquiryStatusLabels).map(([value, label]) => ({ value, label }));
-
-export default async function RequestManagementPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
-}) {
-  const { saved, error } = await searchParams;
-  const supabase = await createClient();
-
-  const [contactResult, individualResult, inquiryResult] = await Promise.all([
-    supabase
-      .from("contact_requests")
-      .select("*, profiles(full_name, email, phone)")
-      .order("created_at", { ascending: false }),
-    supabase
-      .from("individual_requests")
-      .select("*, profiles(full_name, email, phone), education_modules(title), bundle_packages(title)")
-      .order("created_at", { ascending: false }),
-    supabase.from("public_inquiries").select("*").order("created_at", { ascending: false }),
-  ]);
-
-  const contactRequests = (contactResult.data ?? []) as unknown as ContactRow[];
-  const individualRequests = (individualResult.data ?? []) as unknown as IndividualRow[];
-  const inquiries = (inquiryResult.data ?? []) as InquiryRow[];
-
-  // Dosyalı talepler için 1 saatlik imzalı indirme linkleri
-  const signedUrls = new Map<string, string>();
-  const filePaths = contactRequests.filter((request) => request.file_path).map((request) => request.file_path!);
-  if (filePaths.length > 0) {
-    const { data: signed } = await supabase.storage.from("request-files").createSignedUrls(filePaths, 3600);
-    signed?.forEach((entry) => {
-      if (entry.signedUrl && entry.path) signedUrls.set(entry.path, entry.signedUrl);
-    });
-  }
-
+function RequestTable({ items }: { items: AdminRequestListItem[] }) {
   return (
     <>
-      <h1 className="font-display text-2xl font-bold tracking-tight">Talep Yönetimi</h1>
-      <p className="mt-1 text-sm text-ink-soft">
-        Durum ve ilerleme notu güncellemeleri kullanıcının paneline anında yansır.
-      </p>
-
-      <div className="mt-6">
-        <StatusBanner saved={saved} error={error} />
+      {/* Masaüstü tablo */}
+      <div className="hidden overflow-hidden rounded-2xl border border-line bg-paper shadow-card md:block">
+        <table className="w-full text-sm">
+          <thead className="border-b border-line bg-surface/60 text-left text-xs font-semibold uppercase tracking-[0.06em] text-ink-soft">
+            <tr>
+              <th className="px-4 py-3">Talep</th>
+              <th className="px-4 py-3">Üye</th>
+              <th className="px-4 py-3">Durum</th>
+              <th className="px-4 py-3">Sorumlu</th>
+              <th className="px-4 py-3 text-right">Tutar</th>
+              <th className="px-4 py-3 text-right">Son hareket</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line">
+            {items.map((item) => (
+              <tr key={item.id} className={cn("transition-colors hover:bg-surface/60", isOverdue(item) && "bg-amber-soft/40")}>
+                <td className="max-w-80 px-4 py-3">
+                  <Link href={`/admin/talepler/${item.id}`} className="block font-semibold text-ink hover:text-accent">
+                    <span className="line-clamp-1">{item.title || "Başlıksız talep"}</span>
+                  </Link>
+                  <div className="mt-1">
+                    <RequestKindBadge kind={item.kind} mode={item.training_mode} />
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <Avatar name={item.member.name} size="sm" />
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{item.member.name}</p>
+                      <p className="truncate text-xs text-ink-soft">{item.member.email}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className="px-4 py-3">
+                  <RequestStatusBadge status={item.status} size="sm" />
+                </td>
+                <td className="px-4 py-3 text-ink-soft">{item.assignee?.name ?? "—"}</td>
+                <td className="tabular px-4 py-3 text-right font-mono">{amountOf(item) || "—"}</td>
+                <td className="px-4 py-3 text-right">
+                  <AgeLabel item={item} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Analiz / Tez */}
-      <section aria-labelledby="contact-heading">
-        <h2 id="contact-heading" className="font-display text-lg font-semibold">
-          Analiz / Tez Talepleri
-          {contactRequests.some((request) => request.status === "new") && (
-            <span className="ml-2 rounded-full bg-amber-soft px-2.5 py-0.5 text-xs font-semibold">
-              {contactRequests.filter((request) => request.status === "new").length} yeni
-            </span>
-          )}
-        </h2>
-        <div className="mt-3 space-y-3">
-          {contactRequests.map((request) => (
-            <details key={request.id} className="rounded-xl border border-line bg-white p-5 shadow-sm">
-              <summary className="flex cursor-pointer flex-wrap items-center gap-3 text-sm">
-                <span className="font-semibold">{serviceTypeLabels[request.service_type]}</span>
-                <span className="text-ink-soft">{request.profiles?.full_name || request.profiles?.email}</span>
-                <span className="text-ink-soft">{new Date(request.created_at).toLocaleDateString("tr-TR")}</span>
-                <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">
-                  {contactStatusLabels[request.status]}
-                </span>
-              </summary>
-
-              <div className="mt-4 rounded-lg bg-surface p-4 text-sm">
-                <p className="font-semibold">
-                  {request.profiles?.full_name} · {request.profiles?.email}
-                  {request.profiles?.phone && ` · ${request.profiles.phone}`}
-                </p>
-                <p className="mt-2 whitespace-pre-wrap text-ink-soft">{request.message}</p>
-                {request.file_path && signedUrls.has(request.file_path) && (
-                  <div className="mt-3">
-                    <a
-                      href={signedUrls.get(request.file_path)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:underline"
-                    >
-                      <Download className="size-4" aria-hidden /> Ekli dosyayı indir
-                    </a>
-                    {supportsPreview(request.file_path) && (
-                      <FilePreview
-                        url={signedUrls.get(request.file_path)!}
-                        title="Ek dosya"
-                        filePath={request.file_path}
-                        compact
-                      />
-                    )}
-                  </div>
-                )}
+      {/* Mobil kartlar */}
+      <ul className="flex flex-col gap-2.5 md:hidden">
+        {items.map((item) => (
+          <li key={item.id}>
+            <Link
+              href={`/admin/talepler/${item.id}`}
+              className={cn(
+                "block rounded-2xl border bg-paper p-4 shadow-card",
+                isOverdue(item) ? "border-amber/60" : "border-line",
+              )}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <p className="min-w-0 font-semibold text-ink">{item.title || "Başlıksız talep"}</p>
+                <RequestStatusBadge status={item.status} size="sm" />
               </div>
-
-              <form action={updateContactRequest} className="mt-4 space-y-4">
-                <input type="hidden" name="request_id" value={request.id} />
-                <div className="max-w-xs">
-                  <SelectField label="Durum" name="status" defaultValue={request.status} options={contactStatusOptions} />
-                </div>
-                <TextArea label="Admin notu (kullanıcı görmez)" name="admin_notes" defaultValue={request.admin_notes} rows={2} />
-                <SubmitButton>Kaydet</SubmitButton>
-              </form>
-              <div className="mt-3 border-t border-line pt-3">
-                <ConfirmDeleteButton
-                  action={deleteContactRequest}
-                  hiddenFields={[{ name: "request_id", value: request.id }]}
-                  label="Talebi Sil"
-                  confirmTitle="Analiz/tez talebini sil?"
-                  confirmMessage="Talep kaydı ve varsa ekli dosya kalıcı olarak silinecek."
-                />
+              <p className="mt-1 truncate text-sm text-ink-soft">{item.member.name}</p>
+              <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <RequestKindBadge kind={item.kind} mode={item.training_mode} />
+                <AgeLabel item={item} />
               </div>
-            </details>
-          ))}
-          {contactRequests.length === 0 && (
-            <p className="rounded-xl border border-dashed border-line bg-white p-5 text-sm text-ink-soft">
-              Henüz analiz/tez talebi yok.
-            </p>
-          )}
-        </div>
-      </section>
-
-      {/* Bireysel eğitim */}
-      <section aria-labelledby="individual-heading" className="mt-10">
-        <h2 id="individual-heading" className="font-display text-lg font-semibold">
-          Bireysel Eğitim Talepleri
-          {individualRequests.some((request) => request.status === "received") && (
-            <span className="ml-2 rounded-full bg-amber-soft px-2.5 py-0.5 text-xs font-semibold">
-              {individualRequests.filter((request) => request.status === "received").length} yeni
-            </span>
-          )}
-        </h2>
-        <div className="mt-3 space-y-3">
-          {individualRequests.map((request) => (
-            <details key={request.id} className="rounded-xl border border-line bg-white p-5 shadow-sm">
-              <summary className="flex cursor-pointer flex-wrap items-center gap-3 text-sm">
-                <span className="font-semibold">
-                  {request.education_modules?.title}
-                  {" · "}
-                  {request.request_type === "bundle" && request.bundle_packages?.title
-                    ? request.bundle_packages.title
-                    : requestTypeLabels[request.request_type]}
-                </span>
-                <span className="text-ink-soft">{request.profiles?.full_name || request.profiles?.email}</span>
-                {request.request_type !== "schedule" && (
-                  <span className="rounded-full bg-amber-soft px-2.5 py-0.5 text-xs font-bold">
-                    {request.calculated_price.toLocaleString("tr-TR")}₺
-                  </span>
-                )}
-                <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">
-                  {requestStatusLabels[request.status]}
-                </span>
-              </summary>
-
-              <div className="mt-4 rounded-lg bg-surface p-4 text-sm">
-                <p className="font-semibold">
-                  {request.profiles?.full_name} · {request.profiles?.email}
-                  {request.profiles?.phone && ` · ${request.profiles.phone}`}
-                </p>
-                <p className="mt-1 text-ink-soft">
-                  {new Date(request.created_at).toLocaleDateString("tr-TR")}
-                  {request.total_hours ? ` · ${request.total_hours} saat` : ""}
-                </p>
-                {request.user_message && (
-                  <p className="mt-2 whitespace-pre-wrap text-ink-soft">
-                    <span className="font-semibold text-ink">Kullanıcı mesajı: </span>
-                    {request.user_message}
-                  </p>
-                )}
-              </div>
-
-              <form action={updateIndividualRequest} className="mt-4 space-y-4">
-                <input type="hidden" name="request_id" value={request.id} />
-                <div className="max-w-xs">
-                  <SelectField label="Durum" name="status" defaultValue={request.status} options={requestStatusOptions} />
-                </div>
-                <TextArea
-                  label="İlerleme notu (kullanıcı panelinde görünür)"
-                  name="progress_note"
-                  defaultValue={request.progress_note}
-                  rows={2}
-                />
-                <TextArea label="Admin notu (kullanıcı görmez)" name="admin_notes" defaultValue={request.admin_notes} rows={2} />
-                <SubmitButton>Kaydet</SubmitButton>
-              </form>
-              <div className="mt-3 border-t border-line pt-3">
-                <ConfirmDeleteButton
-                  action={deleteIndividualRequest}
-                  hiddenFields={[{ name: "request_id", value: request.id }]}
-                  label="Talebi Sil"
-                  confirmTitle="Bireysel eğitim talebini sil?"
-                  confirmMessage="Talep kaydı kalıcı olarak silinecek."
-                />
-              </div>
-            </details>
-          ))}
-          {individualRequests.length === 0 && (
-            <p className="rounded-xl border border-dashed border-line bg-white p-5 text-sm text-ink-soft">
-              Henüz bireysel eğitim talebi yok.
-            </p>
-          )}
-        </div>
-      </section>
-
-      {/* Bize Ulaşın mesajları (public form) */}
-      <section aria-labelledby="inquiries-heading" className="mt-10">
-        <h2 id="inquiries-heading" className="font-display text-lg font-semibold">
-          Bize Ulaşın Mesajları
-          {inquiries.some((inquiry) => inquiry.status === "new") && (
-            <span className="ml-2 rounded-full bg-amber-soft px-2.5 py-0.5 text-xs font-semibold">
-              {inquiries.filter((inquiry) => inquiry.status === "new").length} yeni
-            </span>
-          )}
-        </h2>
-        <div className="mt-3 space-y-3">
-          {inquiries.map((inquiry) => (
-            <details key={inquiry.id} className="rounded-xl border border-line bg-white p-5 shadow-sm">
-              <summary className="flex cursor-pointer flex-wrap items-center gap-3 text-sm">
-                <span className="font-semibold">{inquiry.name}</span>
-                <span className="text-ink-soft">{inquiry.email}</span>
-                <span className="text-ink-soft">{new Date(inquiry.created_at).toLocaleDateString("tr-TR")}</span>
-                <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent">
-                  {inquiryStatusLabels[inquiry.status]}
-                </span>
-              </summary>
-
-              <div className="mt-4 rounded-lg bg-surface p-4 text-sm">
-                <p className="whitespace-pre-wrap text-ink-soft">{inquiry.message}</p>
-              </div>
-
-              <form action={updateInquiry} className="mt-4 space-y-4">
-                <input type="hidden" name="inquiry_id" value={inquiry.id} />
-                <div className="max-w-xs">
-                  <SelectField label="Durum" name="status" defaultValue={inquiry.status} options={inquiryStatusOptions} />
-                </div>
-                <TextArea label="Admin notu" name="admin_notes" defaultValue={inquiry.admin_notes} rows={2} />
-                <SubmitButton>Kaydet</SubmitButton>
-              </form>
-              <div className="mt-3 border-t border-line pt-3">
-                <ConfirmDeleteButton
-                  action={deleteInquiry}
-                  hiddenFields={[{ name: "inquiry_id", value: inquiry.id }]}
-                  label="Mesajı Sil"
-                  confirmTitle="İletişim mesajını sil?"
-                  confirmMessage={`${inquiry.name} tarafından gönderilen mesaj kalıcı olarak silinecek.`}
-                />
-              </div>
-            </details>
-          ))}
-          {inquiries.length === 0 && (
-            <p className="rounded-xl border border-dashed border-line bg-white p-5 text-sm text-ink-soft">
-              Henüz iletişim mesajı yok.
-            </p>
-          )}
-        </div>
-      </section>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </>
+  );
+}
+
+function RequestBoard({ items }: { items: AdminRequestListItem[] }) {
+  return (
+    <div className="-mx-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6">
+      <div className="grid min-w-max auto-cols-[17rem] grid-flow-col gap-3">
+        {BOARD_COLUMNS.map((status) => {
+          const column = items.filter((item) => item.status === status);
+          return (
+            <section key={status} aria-label={requestStatusAdminLabels[status]} className="flex flex-col rounded-2xl bg-surface/80 p-2 ring-1 ring-inset ring-line">
+              <header className="flex items-center justify-between px-2 pb-2 pt-1">
+                <RequestStatusBadge status={status} size="sm" />
+                <span className="tabular font-mono text-xs text-ink-soft">{column.length}</span>
+              </header>
+              <div className="flex flex-col gap-2">
+                {column.length === 0 && <p className="px-2 py-6 text-center text-xs text-ink-muted">Bu sütunda talep yok</p>}
+                {column.map((item) => (
+                  <article
+                    key={item.id}
+                    className={cn("rounded-xl border bg-paper p-3 shadow-card", isOverdue(item) ? "border-amber/60" : "border-line")}
+                  >
+                    <div className="flex items-start gap-2">
+                      <Link href={`/admin/talepler/${item.id}`} className="min-w-0 flex-1 text-sm font-semibold leading-snug text-ink hover:text-accent">
+                        {item.title || "Başlıksız talep"}
+                      </Link>
+                      <RequestStatusMenu requestId={item.id} status={item.status} />
+                    </div>
+                    <p className="mt-1 truncate text-xs text-ink-soft">{item.member.name}</p>
+                    <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                      <RequestKindBadge kind={item.kind} mode={item.training_mode} />
+                      {amountOf(item) && <span className="tabular font-mono text-xs">{amountOf(item)}</span>}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <AgeLabel item={item} />
+                      {item.due_date && <span className="tabular font-mono text-[11px] text-ink-soft">Teslim {formatDateShort(item.due_date)}</span>}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+export default async function RequestsPage({ searchParams }: { searchParams: SearchParams }) {
+  const params = await searchParams;
+  const [items, admins] = await Promise.all([
+    getAdminRequests({ kind: params.kind, status: params.status, assignee: params.assignee, q: params.q }),
+    getAdmins(),
+  ]);
+  const view = params.view === "board" ? "board" : "list";
+  const filtered = Boolean(params.kind || params.status || params.assignee || params.q);
+  const overdue = items.filter(isOverdue).length;
+
+  return (
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        title="Talepler"
+        description={
+          overdue > 0
+            ? `${overdue} yeni talep 24 saatten uzun süredir yanıt bekliyor. Sıralama son harekete göre.`
+            : "Analiz, tez, kurumsal ve birebir eğitim talepleri tek hatta. Sıralama son harekete göre."
+        }
+      />
+      <Suspense>
+        <RequestFilters admins={admins} />
+      </Suspense>
+      {items.length === 0 ? (
+        <EmptyState
+          icon={ClipboardList}
+          title={filtered ? "Bu filtrelerle talep yok" : "Henüz talep yok"}
+          description={filtered ? "Filtreleri gevşet ya da aramayı temizle." : "Üyeler teklif sihirbazından talep gönderdiğinde burada görünür."}
+        />
+      ) : view === "board" ? (
+        <RequestBoard items={items} />
+      ) : (
+        <RequestTable items={items} />
+      )}
+    </div>
   );
 }

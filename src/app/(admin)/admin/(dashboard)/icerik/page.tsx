@@ -1,117 +1,134 @@
-// src/app/(admin)/admin/(dashboard)/icerik/page.tsx — kritik public metinlerin yönetimi
+// src/app/(admin)/admin/(dashboard)/icerik/page.tsx — site içeriği: anasayfa, hizmet sayfaları, katalog girişi ve SSS
 import type { Metadata } from "next";
-import { getContent } from "@/lib/queries/content";
+import { ExternalLink } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Field, Input, Textarea } from "@/components/ui/field";
+import { PageHeader, SectionHeading } from "@/components/ui/page-header";
+import { formatRelative } from "@/lib/format";
 import {
   defaultAnalysisIntro,
+  defaultCorporateIntro,
   defaultEducationIntro,
   defaultFaq,
   defaultHero,
   defaultThesisIntro,
 } from "@/lib/types/content";
-import type { FaqContent, HeroContent, ServiceIntroContent, EducationIntroContent } from "@/lib/types/content";
-import {
-  updateEducationIntro,
-  updateFaq,
-  updateHero,
-  updateServiceIntro,
-} from "@/lib/actions/admin-content";
-import { StatusBanner, SubmitButton, TextArea, TextInput } from "@/components/admin/fields";
+import { getSiteContentMap } from "@/lib/queries/admin-content";
+import { saveContentSection } from "@/lib/actions/admin-content";
+import { ActionForm, Hidden, SubmitButton } from "@/components/admin/action-form";
+import { FaqEditor } from "@/components/admin/content/faq-editor";
 
-export const metadata: Metadata = { title: "İçerik Yönetimi", robots: { index: false } };
-export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Site içeriği" };
 
-export default async function ContentManagementPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ saved?: string; error?: string }>;
-}) {
-  const { saved, error } = await searchParams;
+type FieldDef = { name: string; label: string; rows?: number; max: number };
 
-  const [hero, analysisIntro, thesisIntro, educationIntro, faq] = await Promise.all([
-    getContent<HeroContent>("home", "hero", defaultHero),
-    getContent<ServiceIntroContent>("analysis", "intro", defaultAnalysisIntro),
-    getContent<ServiceIntroContent>("thesis", "intro", defaultThesisIntro),
-    getContent<EducationIntroContent>("education", "intro", defaultEducationIntro),
-    getContent<FaqContent>("faq", "items", defaultFaq),
-  ]);
+const SECTIONS: { key: string; title: string; path: string; defaults: Record<string, string>; fields: FieldDef[] }[] = [
+  {
+    key: "home/hero",
+    title: "Anasayfa girişi",
+    path: "/",
+    defaults: { ...defaultHero },
+    fields: [
+      { name: "title", label: "Başlık", max: 200 },
+      { name: "subtitle", label: "Alt başlık", rows: 3, max: 500 },
+    ],
+  },
+  {
+    key: "education/intro",
+    title: "Program kataloğu girişi",
+    path: "/programlar",
+    defaults: { ...defaultEducationIntro },
+    fields: [
+      { name: "title", label: "Başlık", max: 150 },
+      { name: "description", label: "Açıklama", rows: 2, max: 500 },
+    ],
+  },
+  ...(
+    [
+      ["analysis/intro", "Analiz sayfası", "/analiz", defaultAnalysisIntro],
+      ["thesis/intro", "Tez düzenleme sayfası", "/tez-duzenleme", defaultThesisIntro],
+      ["corporate/intro", "Kurumsal sayfası", "/kurumsal", defaultCorporateIntro],
+    ] as const
+  ).map(([key, title, path, defaults]) => ({
+    key,
+    title,
+    path,
+    defaults: { ...defaults } as Record<string, string>,
+    fields: [
+      { name: "title", label: "Başlık", max: 150 },
+      { name: "description", label: "Kısa açıklama", rows: 2, max: 500 },
+      { name: "body", label: "Metin", rows: 4, max: 2000 },
+    ],
+  })),
+];
 
-  const faqText = faq.items.map((item) => `${item.question}::${item.answer}`).join("\n");
+export default async function ContentPage() {
+  const content = await getSiteContentMap();
+  const faq = content["faq/items"]?.content.items;
+  const faqItems = Array.isArray(faq)
+    ? faq.map((item) => ({ question: String(item?.question ?? ""), answer: String(item?.answer ?? "") }))
+    : defaultFaq.items;
 
   return (
-    <>
-      <h1 className="font-display text-2xl font-bold tracking-tight">İçerik Yönetimi</h1>
-      <p className="mt-1 text-sm text-ink-soft">
-        Kaydettiğin metinler public sayfalara anında yansır.
-      </p>
-
-      <div className="mt-6">
-        <StatusBanner saved={saved} error={error} />
+    <div className="flex flex-col gap-6">
+      <PageHeader title="Site içeriği" description="Public sayfalardaki giriş metinleri ve sık sorulan sorular. Kaydedince ilgili sayfa hemen güncellenir." />
+      <div className="grid gap-6 xl:grid-cols-2">
+        {SECTIONS.map((section) => {
+          const saved = content[section.key];
+          const values = { ...section.defaults, ...(saved?.content as Record<string, string> | undefined) };
+          return (
+            <Card key={section.key}>
+              <SectionHeading
+                as="h3"
+                title={section.title}
+                description={saved ? `Son değişiklik ${formatRelative(saved.updated_at)}` : "Varsayılan metin kullanılıyor"}
+                action={
+                  <Button asChild variant="ghost" size="icon-sm" aria-label={`${section.title} sayfasını aç`}>
+                    <a href={section.path} target="_blank" rel="noreferrer">
+                      <ExternalLink />
+                    </a>
+                  </Button>
+                }
+              />
+              <ActionForm action={saveContentSection} className="mt-4 flex flex-col gap-4">
+                <Hidden name="section" value={section.key} />
+                {section.fields.map((field) => (
+                  <Field key={field.name} id={`${section.key}-${field.name}`} label={field.label}>
+                    {field.rows ? (
+                      <Textarea name={field.name} rows={field.rows} maxLength={field.max} required defaultValue={values[field.name] ?? ""} />
+                    ) : (
+                      <Input name={field.name} maxLength={field.max} required defaultValue={values[field.name] ?? ""} />
+                    )}
+                  </Field>
+                ))}
+                <div className="flex justify-end">
+                  <SubmitButton variant="outline" size="sm">
+                    Kaydet
+                  </SubmitButton>
+                </div>
+              </ActionForm>
+            </Card>
+          );
+        })}
       </div>
-
-      <div className="max-w-2xl space-y-6">
-        <section aria-labelledby="hero-heading" className="rounded-xl border border-line bg-white p-6 shadow-sm">
-          <h2 id="hero-heading" className="font-display text-lg font-semibold">Anasayfa Hero</h2>
-          <form action={updateHero} className="mt-4 space-y-4">
-            <TextInput label="Başlık" name="title" defaultValue={hero.title} required />
-            <TextArea label="Alt metin" name="subtitle" defaultValue={hero.subtitle} rows={3} />
-            <SubmitButton>Kaydet</SubmitButton>
-          </form>
-        </section>
-
-        <ServiceIntroSection
-          heading="Analiz Sayfası"
-          pageKey="analysis"
-          content={analysisIntro}
+      <Card>
+        <SectionHeading
+          as="h3"
+          title="Sık sorulan sorular"
+          description="Sıralamayı oklarla değiştir. Anasayfada ve SSS sayfasında görünür."
+          action={
+            <Button asChild variant="ghost" size="icon-sm" aria-label="SSS sayfasını aç">
+              <a href="/sss" target="_blank" rel="noreferrer">
+                <ExternalLink />
+              </a>
+            </Button>
+          }
         />
-        <ServiceIntroSection
-          heading="Tez Düzenleme Sayfası"
-          pageKey="thesis"
-          content={thesisIntro}
-        />
-
-        <section aria-labelledby="education-heading" className="rounded-xl border border-line bg-white p-6 shadow-sm">
-          <h2 id="education-heading" className="font-display text-lg font-semibold">Eğitim Sayfası Girişi</h2>
-          <form action={updateEducationIntro} className="mt-4 space-y-4">
-            <TextInput label="Başlık" name="title" defaultValue={educationIntro.title} required />
-            <TextArea label="Açıklama" name="description" defaultValue={educationIntro.description} rows={2} />
-            <SubmitButton>Kaydet</SubmitButton>
-          </form>
-        </section>
-
-        <section aria-labelledby="faq-heading" className="rounded-xl border border-line bg-white p-6 shadow-sm">
-          <h2 id="faq-heading" className="font-display text-lg font-semibold">SSS Maddeleri</h2>
-          <p className="mt-1 text-xs text-ink-soft">
-            Her satıra bir madde, biçim: <code className="rounded bg-surface px-1 py-0.5">Soru::Cevap</code>
-          </p>
-          <form action={updateFaq} className="mt-4 space-y-4">
-            <TextArea label="Maddeler" name="items" defaultValue={faqText} rows={8} />
-            <SubmitButton>Kaydet</SubmitButton>
-          </form>
-        </section>
-      </div>
-    </>
-  );
-}
-
-function ServiceIntroSection({
-  heading,
-  pageKey,
-  content,
-}: {
-  heading: string;
-  pageKey: "analysis" | "thesis";
-  content: ServiceIntroContent;
-}) {
-  return (
-    <section aria-labelledby={`${pageKey}-heading`} className="rounded-xl border border-line bg-white p-6 shadow-sm">
-      <h2 id={`${pageKey}-heading`} className="font-display text-lg font-semibold">{heading}</h2>
-      <form action={updateServiceIntro} className="mt-4 space-y-4">
-        <input type="hidden" name="page_key" value={pageKey} />
-        <TextInput label="Başlık" name="title" defaultValue={content.title} required />
-        <TextArea label="Kısa açıklama (sayfa girişi)" name="description" defaultValue={content.description} rows={2} />
-        <TextArea label="Gövde metni" name="body" defaultValue={content.body} rows={4} />
-        <SubmitButton>Kaydet</SubmitButton>
-      </form>
-    </section>
+        <div className="mt-4">
+          <FaqEditor initial={faqItems} />
+        </div>
+      </Card>
+    </div>
   );
 }
