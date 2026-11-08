@@ -1,7 +1,41 @@
 # Axis Akademi
 
 Analiz, Eğitim (Excel/Word/PowerPoint) ve Tez Düzenleme hizmetleri için Next.js 15 + Supabase web uygulaması.
-## Kurulum
+
+Platform mimarisi, rotalar ve veri modeli: [`docs/superpowers/specs/2026-11-08-axis-2-platform.md`](docs/superpowers/specs/2026-11-08-axis-2-platform.md)
+
+## Yerel geliştirme (önerilen)
+
+Docker çalışırken yerel bir Supabase açılır; canlı veritabanına dokunulmaz.
+
+```bash
+npm install
+npx supabase start        # yerel Postgres + Auth + Storage; tüm migration ve seed'leri uygular
+npm run dev
+```
+
+`npx supabase start` çıktısındaki API URL, publishable ve secret anahtarlarını `.env.local` içine yaz
+(`NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`). Test hesapları `supabase/seed_local_dev.sql` içinde.
+Bileşen kiti `/kit` adresinde (yalnızca geliştirme ortamında).
+
+```bash
+npx supabase db reset     # veritabanını sıfırlar, migration + seed'leri yeniden uygular
+docker exec -i supabase_db_axis-academy psql -U postgres -v ON_ERROR_STOP=1 < supabase/tests/platform_rules.sql   # iş kuralı testleri
+npx supabase gen types typescript --local --schema public > src/lib/supabase/database.types.ts   # şema değişince tipleri yenile
+```
+
+## Canlıya alma: Axis 2.0 (0013_platform)
+
+`0013_platform.sql` eski kodla geriye uyumludur (eski tablolar silinmez, eski talepler `requests` tablosuna kopyalanır).
+Bu yüzden sıra **önce migration, sonra deploy**:
+
+1. Supabase Dashboard → Database → Backups'tan güncel yedeği doğrula.
+2. SQL Editor'da `supabase/migrations/0013_platform.sql` dosyasını çalıştır.
+3. `main`'e merge et; GitHub Actions imajı derleyip sunucuya dağıtır.
+4. Authentication → URL Configuration'da `https://axisakademi.com/auth/callback` adresinin izinli olduğunu kontrol et (şifre sıfırlama da bu adresi kullanır).
+5. Hesap silme ve admin'den kullanıcı silme için `SUPABASE_SECRET_KEY` sunucudaki `.env.production` dosyasına eklenmeli.
+
+## Kurulum (canlı proje)
 
 ```bash
 npm install
@@ -26,6 +60,8 @@ npm run dev
    - `0008_module_syllabus.sql` — haftalık müfredat + sınıf güncel hafta override
    - `0009_bundle_syllabus.sql` — paket bazlı hibrit müfredat (çekirdek + özel haftalar)
    - `0010_class_announcements.sql` — sınıf duyuruları (admin yönetir, kayıtlı öğrenciler panelde görür)
+   - `0011_member_upcoming_classes.sql`, `0012_public_all_upcoming_classes.sql` — yaklaşan dönem fonksiyonları
+   - `0013_platform.sql` — Axis 2.0: açık katalog, birleşik talepler, mesaj/dosya/teklif, oturumlar, bildirimler, bekleme listesi, sertifika, yorum, indirim kodu, blog, eğitmen rolü, kayıt geçmişi
 3. Authentication → Providers'tan **Email** (doğrulama açık) ve **Google** sağlayıcılarını etkinleştir.
 4. Storage bucket'ları `0006` migration ile otomatik oluşur. Eski kurulumlarda manuel oluşturmak istersen **private** bucket'lar:
    - `request-files` — analiz/tez talep dosyaları
