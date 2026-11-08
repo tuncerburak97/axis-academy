@@ -295,7 +295,17 @@ export async function createRequest(_prev: CreateRequestState, formData: FormDat
   return { requestId: created.id, warning };
 }
 
-function base(kind: RequestKind, title: string, message: string, details: Record<string, Json>): Insert {
+/** Boş bırakılan isteğe bağlı alanlar talep detayına yazılmaz */
+function compactDetails(details: Record<string, Json>): Record<string, Json> {
+  return Object.fromEntries(
+    Object.entries(details).filter(([, value]) =>
+      value !== null && value !== undefined && value !== "" && !(Array.isArray(value) && value.length === 0),
+    ),
+  );
+}
+
+function base(kind: RequestKind, title: string, message: string, rawDetails: Record<string, Json>): Insert {
+  const details = compactDetails(rawDetails);
   return {
     kind,
     training_mode: null,

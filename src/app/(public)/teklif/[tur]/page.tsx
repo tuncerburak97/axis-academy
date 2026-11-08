@@ -15,7 +15,7 @@ const kinds: Record<WizardKind, { title: string; lead: string; eyebrow: string; 
   analiz: {
     eyebrow: "Analiz teklifi",
     title: "Analiz ihtiyacını anlat",
-    lead: "Dört kısa adım. Ekibimiz inceleyip net teklifini panelinde sunar.",
+    lead: "Birkaç kısa adım. Ekibimiz inceleyip net teklifini panelinde sunar.",
     back: { href: "/analiz", label: "Analiz" },
   },
   tez: {

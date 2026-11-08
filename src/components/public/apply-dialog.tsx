@@ -231,7 +231,7 @@ function ApplyForm({
         </fieldset>
 
         <Field id="apply-note" label="Eklemek istediğin bir not" optional hint="Seviyen, beklentin ya da kaçıracağın bir ders varsa yaz.">
-          <Textarea name="note" rows={3} maxLength={1000} placeholder="Örn. Pivot tabloları biliyorum, makrolara odaklanmak istiyorum." />
+          <Textarea name="note" rows={3} maxLength={1000} placeholder="Örn. Temel seviyedeyim, en çok raporlama konusunda zorlanıyorum." />
         </Field>
 
         <div className="flex flex-col gap-1.5">
