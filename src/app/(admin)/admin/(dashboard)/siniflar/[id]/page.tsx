@@ -74,7 +74,7 @@ export default async function ClassDetailPage({
 
       <div className="mt-6">
         <ClassDetailTabs
-          trainingClass={trainingClass}
+          trainingClass={trainingClass as never}
           approvedCount={approvedCount}
           pendingCount={pendingCount}
           enrollments={enrollments}

@@ -4,6 +4,7 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import type { Json } from "@/lib/supabase/database.types";
 import { requireAdmin } from "@/lib/actions/admin-guard";
 
 // Bölüm anahtarına göre hangi public path'lerin tazeleneceği
@@ -20,7 +21,7 @@ async function upsertContent(pageKey: string, sectionKey: string, contentJson: u
 
   const { error } = await supabase
     .from("site_content")
-    .upsert({ page_key: pageKey, section_key: sectionKey, content_json: contentJson, updated_at: new Date().toISOString() });
+    .upsert({ page_key: pageKey, section_key: sectionKey, content_json: (contentJson ?? {}) as NonNullable<Json>, updated_at: new Date().toISOString() });
   if (error) redirect("/admin/icerik?error=db");
 
   for (const path of revalidateTargets[`${pageKey}/${sectionKey}`] ?? []) {

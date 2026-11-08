@@ -1,3 +1,6 @@
+-- Fonksiyon gövdeleri tablolar oluşmadan tanımlandığı için doğrulama kapatılır (CLI ile sıfırdan kurulum)
+set check_function_bodies = off;
+
 -- supabase/migrations/0001_schema.sql
 -- Axis Academy Phase 1 schema: tables, RLS policies, atomic class enrollment function
 -- Naming convention: all identifiers and enum values in English; UI renders Turkish labels.

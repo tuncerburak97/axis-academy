@@ -34,7 +34,7 @@ export async function getIndividualHourlyPlan(moduleId: string): Promise<Pricing
     .order("sort_order")
     .limit(1)
     .maybeSingle();
-  return data;
+  return data as PricingPlan | null;
 }
 
 // Kontenjan sayımı RLS'e takılmadan SECURITY DEFINER fonksiyonundan gelir
