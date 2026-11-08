@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getPostBySlug, getPublishedPosts, readingMinutes } from "@/lib/queries/blog";
-import { organizationJsonLd, siteUrl } from "@/lib/queries/public-seo";
+import { organizationJsonLd, openGraphDefaults, siteUrl } from "@/lib/queries/public-seo";
 import { formatDate } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     description: post.excerpt,
     alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
+      ...openGraphDefaults,
       type: "article",
       title: post.title,
       description: post.excerpt,

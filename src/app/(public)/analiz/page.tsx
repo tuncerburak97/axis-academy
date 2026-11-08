@@ -6,6 +6,7 @@ import { defaultAnalysisIntro, type ServiceIntroContent } from "@/lib/types/cont
 import { Card } from "@/components/ui/card";
 import { Eyebrow } from "@/components/ui/page-header";
 import { ServiceLanding } from "@/components/public/service-landing";
+import { AnalysisComposite } from "@/components/public/showcase-art";
 
 export const metadata: Metadata = {
   title: "Bibliyometrik ve İstatistiksel Analiz",
@@ -51,6 +52,7 @@ export default async function AnalysisPage() {
       deliverables={deliverables}
       deliverablesNote="Teslim dosyaların panelindeki Belgelerim bölümünde durur; istediğin zaman indirirsin."
       faq={faq}
+      visual={<AnalysisComposite />}
       aside={
         <Card padding="lg" className="shadow-raise">
           <Eyebrow>Teklif için hazırla</Eyebrow>

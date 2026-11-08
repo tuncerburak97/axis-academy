@@ -10,6 +10,7 @@ import { Price } from "@/components/ui/data";
 import { Eyebrow } from "@/components/ui/page-header";
 import { Container, Section, SectionIntro } from "@/components/public/section";
 import { ServiceLanding } from "@/components/public/service-landing";
+import { TrainingComposite } from "@/components/public/showcase-art";
 import { CategoryMark } from "@/components/public/program-card";
 import type { PipelineStep } from "@/components/public/blocks";
 
@@ -69,6 +70,7 @@ export default async function CorporatePage() {
       steps={steps}
       deliverables={deliverables}
       faq={faq}
+      visual={<TrainingComposite />}
       aside={
         <Card padding="lg" className="shadow-raise">
           <Eyebrow>Kişi başı fiyatlar</Eyebrow>

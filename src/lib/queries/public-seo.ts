@@ -9,3 +9,10 @@ export const organizationJsonLd = {
   name: "Axis Akademi",
   url: siteUrl(),
 };
+
+/** Sayfa kendi openGraph nesnesini verdiğinde Next kökteki değerleri birleştirmez; bu alanları ayrıca ekle */
+export const openGraphDefaults = {
+  siteName: "Axis Akademi",
+  locale: "tr_TR",
+  images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Axis Akademi: analiz, eğitim ve tez düzenleme" }],
+};

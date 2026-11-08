@@ -6,7 +6,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { ArrowRight, Building2, CalendarDays, ChevronRight, Clock3, GraduationCap, MapPin, Sparkles, UserRound } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { getProgramByParam, getProgramDetail, isUuid, programCategoryLabels, isProgramCategory } from "@/lib/queries/public-catalog";
-import { organizationJsonLd, siteUrl } from "@/lib/queries/public-seo";
+import { openGraphDefaults, organizationJsonLd, siteUrl } from "@/lib/queries/public-seo";
 import { programLevelLabels, type ProgramLevel } from "@/lib/types/platform";
 import { formatDate, formatTRY } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +20,7 @@ import { AccentTitle, Container, Section, SectionIntro } from "@/components/publ
 import { CohortRow, MyCohortStatus, cohortIsFull } from "@/components/public/cohort-row";
 import { CategoryMark } from "@/components/public/program-card";
 import { Checklist, FaqList, JsonLd, ReviewList } from "@/components/public/blocks";
+import { ProgramVisual } from "@/components/public/showcase-art";
 import { SyllabusTimeline } from "@/components/public/syllabus-timeline";
 import { ApplyButton, ApplyProvider } from "@/components/public/apply-dialog";
 import { BundleSyllabusDialog } from "@/components/public/bundle-syllabus-dialog";
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     title: program.title,
     description: program.description,
     alternates: { canonical: `/programlar/${program.slug}` },
-    openGraph: { title: `${program.title} | Axis Akademi`, description: program.description, type: "website", url: siteUrl(`/programlar/${program.slug}`) },
+    openGraph: { ...openGraphDefaults, title: `${program.title} | Axis Akademi`, description: program.description, type: "website", url: siteUrl(`/programlar/${program.slug}`) },
   };
 }
 
@@ -134,8 +135,10 @@ export default async function ProgramPage({ params, searchParams }: { params: Pa
       <JsonLd data={courseJsonLd} />
 
       {/* GİRİŞ */}
-      <section className="border-b border-line bg-canvas">
-        <Container className="grid gap-10 py-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14">
+      <section className="relative isolate overflow-hidden border-b border-line bg-canvas">
+        <div aria-hidden className="bg-grid-light absolute inset-0 -z-10 opacity-60 [mask-image:radial-gradient(ellipse_70%_80%_at_85%_10%,black,transparent)]" />
+        <div aria-hidden className="glow-indigo absolute -right-40 -top-32 -z-10 size-[640px] opacity-35" />
+        <Container className="grid gap-10 py-10 sm:py-14 lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-14 lg:py-16">
           <div className="min-w-0">
             <nav aria-label="Konum" className="flex items-center gap-1.5 text-sm text-ink-soft">
               <Link href="/programlar" className="hover:text-ink">
@@ -157,7 +160,7 @@ export default async function ProgramPage({ params, searchParams }: { params: Pa
                 )}
               </div>
             </div>
-            <h1 className="mt-5 text-[34px] font-semibold leading-[1.04] tracking-[-0.035em] text-balance sm:text-5xl">
+            <h1 className="mt-5 text-[36px] font-semibold leading-[1.02] tracking-[-0.04em] text-balance sm:text-[56px]">
               <AccentTitle text={program.title} />
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg">{program.description}</p>
@@ -179,8 +182,12 @@ export default async function ProgramPage({ params, searchParams }: { params: Pa
             </dl>
           </div>
 
-          {/* Sıradaki dönem kartı */}
-          <Card padding="none" className="self-start overflow-hidden shadow-raise lg:mt-10">
+          {/* Sıradaki dönem kartı: masaüstünde başında programın çizimi */}
+          <div className="min-w-0 self-start">
+            <Card padding="none" className="relative overflow-hidden shadow-pop">
+            <div className="hidden border-b border-line lg:block">
+              <ProgramVisual category={category} className="h-40" />
+            </div>
             {next ? (
               <>
                 <div className="flex gap-4 p-5">
@@ -231,7 +238,8 @@ export default async function ProgramPage({ params, searchParams }: { params: Pa
                 </Button>
               </div>
             )}
-          </Card>
+            </Card>
+          </div>
         </Container>
       </section>
 

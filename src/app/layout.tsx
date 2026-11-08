@@ -15,12 +15,17 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
+  // OG/Twitter görsel URL'leri bu kökle mutlak hale gelir; öncelik sırası lib/queries/public-seo.ts → siteUrl() ile aynı
+  metadataBase: new URL(process.env.APP_URL ?? process.env.NEXT_PUBLIC_SITE_URL ?? "https://axisakademi.com"),
   title: {
     default: "Axis Akademi — Analiz, Eğitim ve Tez Düzenleme",
     template: "%s | Axis Akademi",
   },
   description:
     "Bibliyometrik ve istatistiksel analiz, Excel/Word/PowerPoint eğitimleri ve tez düzenleme hizmetleri. Profesyonel, net ve güvenilir.",
+  // Görseller app/opengraph-image.tsx ve app/twitter-image.tsx dosya kuralıyla otomatik eklenir
+  openGraph: { siteName: "Axis Akademi", locale: "tr_TR", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 // viewport-fit=cover: mobil alt sekme çubuğu güvenli alan boşluklarını (env(safe-area-inset-*)) kullanabilsin

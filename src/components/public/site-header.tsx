@@ -3,12 +3,17 @@ import Link from "next/link";
 import { getSessionUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { DesktopNav, MobileMenu, UserMenu } from "@/components/public/site-nav";
+import { LogoMark } from "@/components/brand/logo-mark";
+import { cn } from "@/lib/utils";
 
-export function Logo({ className }: { className?: string }) {
+export function Logo({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
   return (
-    <span className={className}>
-      <span className="font-semibold tracking-[-0.03em]">Axis</span>{" "}
-      <span className="accent-word text-[1.12em] text-accent">Akademi</span>
+    <span className={cn("inline-flex items-center gap-2.5", className)}>
+      <LogoMark className={cn("size-8", tone === "dark" && "rounded-[9px] ring-1 ring-white/15")} />
+      <span>
+        <span className="font-semibold tracking-[-0.03em]">Axis</span>{" "}
+        <span className={cn("accent-word text-[1.12em]", tone === "dark" ? "text-accent-glow" : "text-accent")}>Akademi</span>
+      </span>
     </span>
   );
 }

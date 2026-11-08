@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Eyebrow } from "@/components/ui/page-header";
 import { AccentTitle, Container, Section, SectionIntro } from "@/components/public/section";
-import { Checklist, CtaBand, FaqList, JsonLd, Pipeline, type PipelineStep } from "@/components/public/blocks";
+import { Checklist, FaqList, JsonLd, Pipeline, type PipelineStep } from "@/components/public/blocks";
+import { DarkCta, GhostDarkButton, LightButton } from "@/components/public/home-sections";
 import { organizationJsonLd, siteUrl } from "@/lib/queries/public-seo";
 import type { FaqItem, ServiceIntroContent } from "@/lib/types/content";
 
@@ -29,6 +30,7 @@ export function ServiceLanding({
   steps,
   faq,
   aside,
+  visual,
   children,
 }: {
   path: string;
@@ -41,8 +43,10 @@ export function ServiceLanding({
   deliverablesNote?: string;
   steps?: PipelineStep[];
   faq: FaqItem[];
-  /** Giriş bölümünün sağ sütunu (ör. "teklif için gerekenler" kartı) */
+  /** "Teklif için hazırla" kartı: teslim bölümünde, çıktı listesinin yanında durur */
   aside: React.ReactNode;
+  /** Giriş bölümünün sağındaki örnek çıktı çizimi */
+  visual: React.ReactNode;
   /** Süreçten sonra eklenecek sayfaya özel bölümler */
   children?: React.ReactNode;
 }) {
@@ -59,8 +63,10 @@ export function ServiceLanding({
           areaServed: "TR",
         }}
       />
-      <section className="border-b border-line bg-canvas">
-        <Container className="grid gap-10 py-12 sm:py-16 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start lg:gap-14 lg:py-20">
+      <section className="relative isolate overflow-hidden border-b border-line bg-canvas">
+        <div aria-hidden className="bg-grid-light absolute inset-0 -z-10 opacity-60 [mask-image:radial-gradient(ellipse_70%_80%_at_80%_20%,black,transparent)]" />
+        <div aria-hidden className="glow-indigo absolute -right-40 -top-24 -z-10 size-[680px] opacity-40" />
+        <Container className="grid gap-14 py-12 sm:py-16 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] lg:items-center lg:gap-12 lg:py-24">
           <div className="min-w-0">
             <Eyebrow>{eyebrow}</Eyebrow>
             <h1 className="mt-4 text-[36px] font-semibold leading-[1.03] tracking-[-0.04em] text-balance sm:text-[56px]">
@@ -79,7 +85,7 @@ export function ServiceLanding({
               </Button>
             </div>
           </div>
-          <div className="min-w-0">{aside}</div>
+          <div className="min-w-0 lg:pl-4">{visual}</div>
         </Container>
       </section>
 
@@ -114,16 +120,19 @@ export function ServiceLanding({
 
       <Section aria-labelledby="teslim-baslik">
         <Container className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start">
-          <SectionIntro
-            id="teslim-baslik"
-            eyebrow="Teslim"
-            title="Elinde ne olacak?"
-            description={deliverablesNote}
-            className="sm:flex-col sm:items-start"
-          />
-          <Card padding="lg">
-            <Checklist items={deliverables} />
-          </Card>
+          <div className="min-w-0">
+            <SectionIntro
+              id="teslim-baslik"
+              eyebrow="Teslim"
+              title="Elinde ne olacak?"
+              description={deliverablesNote}
+              className="sm:flex-col sm:items-start"
+            />
+            <Card padding="lg" className="mt-8">
+              <Checklist items={deliverables} />
+            </Card>
+          </div>
+          <div className="min-w-0 lg:pt-2">{aside}</div>
         </Container>
       </Section>
 
@@ -146,19 +155,19 @@ export function ServiceLanding({
         </Container>
       </Section>
 
-      <Container className="py-16 sm:py-24">
-        <CtaBand
-          eyebrow="Teklif ücretsiz"
-          title="İki dakikada anlat, net teklifini panelinde gör"
-          description="Formu doldurmak için hesap gerekmez; göndermeden önce giriş yapman yeterli. Taslağın kaybolmaz."
-        >
-          <Button asChild size="lg" variant="secondary">
-            <Link href={ctaHref}>
-              {ctaLabel} <ArrowRight />
-            </Link>
-          </Button>
-        </CtaBand>
-      </Container>
+      <DarkCta
+        title={
+          <>
+            İki dakikada anlat, teklifini <span className="accent-word text-[1.06em] text-accent-glow">panelinde</span> gör
+          </>
+        }
+        description="Formu doldurmak için hesap gerekmez; göndermeden önce giriş yapman yeterli. Taslağın kaybolmaz, teklif ücretsiz."
+      >
+        <LightButton href={ctaHref}>
+          {ctaLabel} <ArrowRight className="size-4" aria-hidden />
+        </LightButton>
+        <GhostDarkButton href="/iletisim">Önce soru sor</GhostDarkButton>
+      </DarkCta>
     </>
   );
 }

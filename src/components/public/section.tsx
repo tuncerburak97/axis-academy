@@ -89,11 +89,13 @@ export function PageHero({
   className?: string;
 }) {
   return (
-    <section className={cn("border-b border-line bg-canvas", className)}>
-      <Container className={cn("grid gap-10 py-12 sm:py-16", aside && "lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-end")}>
+    <section className={cn("relative isolate overflow-hidden border-b border-line bg-canvas", className)}>
+      <div aria-hidden className="bg-grid-light absolute inset-0 -z-10 opacity-60 [mask-image:radial-gradient(ellipse_70%_90%_at_85%_0%,black,transparent)]" />
+      <div aria-hidden className="glow-indigo absolute -right-48 -top-48 -z-10 size-[620px] opacity-30" />
+      <Container className={cn("grid gap-10 py-12 sm:py-16 lg:py-20", aside && "lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)] lg:items-end")}>
         <div className="min-w-0">
           {eyebrow && <Eyebrow className="mb-4">{eyebrow}</Eyebrow>}
-          <h1 className="text-[34px] font-semibold leading-[1.05] tracking-[-0.035em] text-balance sm:text-5xl">{title}</h1>
+          <h1 className="text-[36px] font-semibold leading-[1.03] tracking-[-0.04em] text-balance sm:text-[56px]">{title}</h1>
           {description && <p className="mt-4 max-w-2xl text-base leading-relaxed text-ink-soft sm:text-lg">{description}</p>}
           {children && <div className="mt-7">{children}</div>}
         </div>

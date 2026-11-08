@@ -6,6 +6,7 @@ import { defaultThesisIntro, type ServiceIntroContent } from "@/lib/types/conten
 import { Card } from "@/components/ui/card";
 import { Eyebrow } from "@/components/ui/page-header";
 import { ServiceLanding } from "@/components/public/service-landing";
+import { ThesisComposite } from "@/components/public/showcase-art";
 
 export const metadata: Metadata = {
   title: "Tez Düzenleme",
@@ -51,6 +52,7 @@ export default async function ThesisPage() {
       deliverables={deliverables}
       deliverablesNote="Teslim dosyaların panelindeki Belgelerim bölümünde durur."
       faq={faq}
+      visual={<ThesisComposite />}
       aside={
         <Card padding="lg" className="shadow-raise">
           <Eyebrow>Teklif için gerekenler</Eyebrow>
